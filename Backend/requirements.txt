@@ -1,32 +1,88 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-# PostgreSQL dependencies
-asyncpg==0.29.0
-sqlalchemy[asyncio]==2.0.23
+# ZOREL LEATHER Backend Dependencies
+# ===================================
+
+# Core Framework
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+starlette==0.47.3
+
+# Database & ORM
+sqlalchemy[asyncio]==2.0.43
+asyncpg==0.30.0
 alembic==1.13.1
-# MongoDB dependencies removed - using PostgreSQL with SQLAlchemy
-# Authentication and security
-PyJWT==2.8.0
+
+# Authentication & Security
+PyJWT==2.10.1
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
-python-dotenv==1.0.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
-email-validator==2.1.0
-authlib==1.2.1
-requests==2.31.0
-# Payment and communication
-stripe==7.8.0
-twilio==8.10.3
-# File handling and utilities
-aiofiles==23.2.1
-pillow==10.1.0
+python-multipart==0.0.20
+authlib==1.6.3
+bcrypt==4.3.0
+cryptography==45.0.7
+
+# Data Validation & Settings
+pydantic==2.11.9
+pydantic-settings==2.10.1
+pydantic-core==2.33.2
+email-validator==2.3.0
+python-dotenv==1.1.1
+
+# HTTP & API
+httpx==0.28.1
+requests==2.32.5
+aiohttp==3.12.15
+aiohttp-retry==2.9.1
+
+# Payment Processing
+stripe==12.5.1
+
+# Communication Services
+twilio==9.8.0
+aiosmtplib==4.0.2
+
+# File Handling & Media
+aiofiles==24.1.0
+pillow==11.3.0
 python-slugify==8.0.1
-httpx==0.25.2
-jinja2==3.1.2
-aiosmtplib==3.0.1
-redis==5.0.1
+
+# Template Engine
+jinja2==3.1.6
+markupsafe==3.0.2
+
+# Rate Limiting & Caching
 slowapi==0.1.9
-# Testing
+limits==5.5.0
+
+# Utilities
+click==8.2.1
+packaging==25.0
+typing-extensions==4.15.0
+annotated-types==0.7.0
+
+# Development & Testing
 pytest==7.4.3
 pytest-asyncio==0.21.1
+
+# Additional Dependencies
+anyio==4.10.0
+attrs==25.3.0
+certifi==2025.8.3
+cffi==2.0.0
+charset-normalizer==3.4.3
+deprecated==1.2.18
+dnspython==2.8.0
+frozenlist==1.7.0
+greenlet==3.2.4
+h11==0.16.0
+httpcore==1.0.9
+idna==3.10
+jwt==1.4.0
+multidict==6.6.4
+propcache==0.3.2
+pycparser==2.23
+sniffio==1.3.1
+urllib3==2.5.0
+wrapt==1.17.3
+yarl==1.20.1
+aiohappyeyeballs==2.6.1
+aiosignal==1.4.0
+typing-inspection==0.4.1

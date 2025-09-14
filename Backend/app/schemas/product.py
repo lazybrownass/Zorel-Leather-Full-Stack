@@ -6,6 +6,7 @@ import re
 
 class ProductBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255, description="Product name")
+    slug: Optional[str] = Field(None, min_length=1, max_length=255, description="Product URL slug")
     description: Optional[str] = Field(None, max_length=2000, description="Product description")
     price: Optional[float] = Field(None, gt=0, description="Product price")
     original_price: Optional[float] = Field(None, gt=0, description="Original price before discount")
@@ -38,6 +39,13 @@ class ProductBase(BaseModel):
         if v and not re.match(r'^[A-Z0-9\-_]+$', v):
             raise ValueError('SKU must contain only uppercase letters, numbers, hyphens, and underscores')
         return v.upper() if v else v
+
+    @field_validator('slug')
+    @classmethod
+    def validate_slug(cls, v):
+        if v and not re.match(r'^[a-z0-9\-]+$', v):
+            raise ValueError('Slug must contain only lowercase letters, numbers, and hyphens')
+        return v
 
     @field_validator('category')
     @classmethod
@@ -76,6 +84,7 @@ class ProductCreate(ProductBase):
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
+    slug: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = Field(None, gt=0)
     original_price: Optional[float] = None

@@ -1,25 +1,30 @@
 from typing import List, Optional
 from datetime import datetime
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from sqlalchemy import select, and_, or_, desc, asc, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.sqlalchemy_models import Order, OrderItem, User, Product
-from app.schemas.order import (
-    OrderCreate, 
-    OrderUpdate, 
-    OrderResponse, 
-    OrderListResponse,
-    OrderFilters,
-    OrderSummary,
-    OrderAnalytics
+from sqlalchemy import select
+from app.models.sqlalchemy_models import (
+    Order, 
+    OrderItem,
+    OrderStatus,
+    PaymentStatus,
+    PaymentMethod,
+    User
 )
-from app.core.postgresql import get_db
+from app.schemas.order import (
+    OrderCreate,
+    OrderUpdate,
+    OrderResponse,
+    OrderItemResponse,
+    OrderFilters
+)
 from app.core.security import get_current_active_user, require_roles, UserRole
 from app.core.exceptions import NotFoundException, ForbiddenException
+from app.core.postgresql import get_db
 from app.services.notification_service import NotificationService
-import uuid
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -34,230 +39,303 @@ async def create_order(
     db: AsyncSession = Depends(get_db)
 ):
     """Create a new order request"""
-    # Calculate totals and get product information
-    subtotal = 0.0
-    order_items = []
-    
-    for item_data in order_data.items:
-        # Get product information
-        product_result = await db.execute(
-            select(Product).where(Product.id == item_data.product_id, Product.is_active == True)
+    try:
+        # Calculate totals
+        subtotal = sum(item.price * item.quantity for item in order_data.items)
+        tax = subtotal * 0.0833  # 8.33% tax
+        total = subtotal + order_data.shipping_cost + tax
+        
+        # Create order
+        order = Order(
+            user_id=current_user.id,
+            customer_name=order_data.customer_name,
+            customer_email=order_data.customer_email,
+            customer_phone=order_data.customer_phone,
+            order_number=f"ORD-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{str(current_user.id)[:8]}",
+            status=OrderStatus.PENDING,
+            total_amount=total,
+            gst_amount=tax,
+            payment_method=PaymentMethod.ONLINE,
+            payment_status=PaymentStatus.PENDING,
+            shipping_address=order_data.shipping_address,
+            customer_notes=order_data.notes
         )
-        product = product_result.scalar_one_or_none()
         
-        if not product:
-            raise HTTPException(status_code=404, detail=f"Product {item_data.product_id} not found")
+        db.add(order)
+        await db.commit()
+        await db.refresh(order)
         
-        # Calculate item total
-        item_total = product.price * item_data.quantity
-        subtotal += item_total
+        # Create order items
+        for item in order_data.items:
+            # Convert product_id to UUID if it's a string
+            try:
+                product_uuid = uuid.UUID(item.product_id) if isinstance(item.product_id, str) else item.product_id
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid product_id format: {item.product_id}")
+            
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=product_uuid,
+                quantity=item.quantity,
+                price=item.price
+            )
+            db.add(order_item)
         
-        # Create order item
-        order_item = OrderItem(
-            product_id=product.id,
-            quantity=item_data.quantity,
-            price=product.price,
-            size=item_data.size,
-            color=item_data.color
+        await db.commit()
+        
+        # Send notification to admin
+        notification_service = NotificationService()
+        await notification_service.send_order_request_notification(order)
+        
+        # Get order items for response
+        result = await db.execute(select(OrderItem).where(OrderItem.order_id == order.id))
+        order_items = result.scalars().all()
+        items_response = [
+            OrderItemResponse(
+                id=str(item.id),
+                product_id=str(item.product_id),
+                quantity=item.quantity,
+                price=item.price
+            )
+            for item in order_items
+        ]
+        
+        return OrderResponse(
+            id=str(order.id),
+            customer_name=order.customer_name,
+            customer_email=order.customer_email,
+            customer_phone=order.customer_phone,
+            shipping_address=order.shipping_address,
+            items=items_response,
+            status=order.status,
+            payment_status=order.payment_status,
+            payment_method=order.payment_method,
+            total_amount=order.total_amount,
+            tracking_number=order.tracking_number,
+            notes=order.customer_notes,
+            created_at=order.created_at,
+            updated_at=order.updated_at
         )
-        order_items.append(order_item)
     
-    # Calculate GST and total
-    gst_amount = subtotal * 0.0833  # 8.33% GST
-    total_amount = subtotal + gst_amount
-    
-    # Generate order number
-    order_number = f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
-    
-    # Create order
-    order = Order(
-        user_id=current_user.id,
-        order_number=order_number,
-        status="pending",
-        total_amount=total_amount,
-        gst_amount=gst_amount,
-        payment_method=order_data.payment_method.value,
-        payment_status="pending",
-        shipping_address=order_data.shipping_address.dict(),
-        billing_address=order_data.billing_address.dict() if order_data.billing_address else None,
-        customer_notes=order_data.customer_notes,
-        order_items=order_items
-    )
-    
-    db.add(order)
-    await db.commit()
-    await db.refresh(order)
-    
-    # Send notification to admin
-    notification_service = NotificationService()
-    await notification_service.send_order_request_notification(order)
-    
-    return OrderResponse.from_orm(order)
+    except Exception as e:
+        await db.rollback()
+        print(f"Error creating order: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create order: {str(e)}")
 
 
 @router.get("/{order_id}", response_model=OrderResponse)
 async def get_order(
     order_id: str,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get order by ID (user can only see their own orders)"""
-    result = await db.execute(
-        select(Order).where(Order.id == order_id)
-    )
-    order = result.scalar_one_or_none()
-    
+    order = await Order.get(order_id)
     if not order:
         raise NotFoundException("Order not found")
     
     # Check if user owns this order or is admin
-    if order.user_id != current_user.id and current_user.role != UserRole.ADMIN:
+    if order.user_id != str(current_user.id) and current_user.role != UserRole.ADMIN:
         raise ForbiddenException("Access denied")
     
-    return OrderResponse.from_orm(order)
+    return OrderResponse(
+        id=str(order.id),
+        customer_name=order.customer_name,
+        customer_email=order.customer_email,
+        customer_phone=order.customer_phone,
+        shipping_address=order.shipping_address,
+        items=order.items,
+        status=order.status,
+        payment_status=order.payment_status,
+        total_amount=order.total,
+        tracking_number=order.tracking_number,
+        notes=order.notes,
+        created_at=order.created_at,
+        updated_at=order.updated_at
+    )
 
 
-@router.get("/", response_model=OrderListResponse)
+@router.get("/", response_model=List[OrderResponse])
 async def get_user_orders(
     current_user: User = Depends(get_current_active_user),
-    status: Optional[str] = Query(None),
+    status: Optional[OrderStatus] = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
     """Get current user's orders"""
-    # Build base query
+    from sqlalchemy import select
+    from app.models.sqlalchemy_models import Order, OrderItem
+    from app.schemas.order import OrderItemResponse
+    
+    # Build query
     query = select(Order).where(Order.user_id == current_user.id)
     
-    # Apply status filter
     if status:
         query = query.where(Order.status == status)
     
-    # Get total count
-    count_query = select(func.count(Order.id)).where(Order.user_id == current_user.id)
-    if status:
-        count_query = count_query.where(Order.status == status)
-    
-    total_result = await db.execute(count_query)
-    total = total_result.scalar()
-    
-    # Apply pagination and sorting
+    # Apply pagination
     offset = (page - 1) * limit
-    query = query.order_by(desc(Order.created_at)).offset(offset).limit(limit)
+    query = query.offset(offset).limit(limit).order_by(Order.created_at.desc())
     
-    # Execute query
     result = await db.execute(query)
     orders = result.scalars().all()
     
-    # Calculate total pages
-    total_pages = (total + limit - 1) // limit
+    # Convert to response format
+    order_responses = []
+    for order in orders:
+        # Get order items
+        items_result = await db.execute(
+            select(OrderItem).where(OrderItem.order_id == order.id)
+        )
+        items = items_result.scalars().all()
+        
+        items_response = [
+            OrderItemResponse(
+                product_id=str(item.product_id),
+                quantity=item.quantity,
+                price=item.price,
+                size=item.size,
+                color=item.color
+            )
+            for item in items
+        ]
+        
+        order_responses.append(OrderResponse(
+            id=str(order.id),
+            customer_name=order.customer_name,
+            customer_email=order.customer_email,
+            customer_phone=order.customer_phone,
+            shipping_address=order.shipping_address,
+            items=items_response,
+            status=order.status,
+            payment_status=order.payment_status,
+            payment_method=order.payment_method,
+            total_amount=order.total_amount,
+            tracking_number=order.tracking_number,
+            notes=order.customer_notes,
+            created_at=order.created_at,
+            updated_at=order.updated_at
+        ))
     
-    return OrderListResponse(
-        orders=[OrderResponse.from_orm(order) for order in orders],
-        total=total,
-        page=page,
-        limit=limit,
-        total_pages=total_pages
-    )
+    return order_responses
 
 
 @router.put("/{order_id}/confirm", response_model=OrderResponse)
 async def confirm_order(
     order_id: str,
-    current_user: User = Depends(require_roles(UserRole.ADMIN)),
-    db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(require_roles(UserRole.ADMIN))
 ):
     """Confirm an order (Admin only)"""
-    result = await db.execute(
-        select(Order).where(Order.id == order_id)
-    )
-    order = result.scalar_one_or_none()
-    
+    order = await Order.get(order_id)
     if not order:
         raise NotFoundException("Order not found")
     
-    if order.status != "pending":
+    if order.status != OrderStatus.PENDING_CONFIRMATION:
         raise HTTPException(status_code=400, detail="Order cannot be confirmed")
     
     # Update order status
-    order.status = "confirmed"
-    order.confirmed_at = datetime.utcnow()
+    order.status = OrderStatus.CONFIRMED
     order.updated_at = datetime.utcnow()
-    
-    await db.commit()
-    await db.refresh(order)
+    await order.save()
     
     # Send confirmation notification with payment link
     notification_service = NotificationService()
     await notification_service.send_order_confirmation_notification(order)
     
-    return OrderResponse.from_orm(order)
+    return OrderResponse(
+        id=str(order.id),
+        customer_name=order.customer_name,
+        customer_email=order.customer_email,
+        customer_phone=order.customer_phone,
+        shipping_address=order.shipping_address,
+        items=order.items,
+        status=order.status,
+        payment_status=order.payment_status,
+        total_amount=order.total,
+        tracking_number=order.tracking_number,
+        notes=order.notes,
+        created_at=order.created_at,
+        updated_at=order.updated_at
+    )
 
 
 @router.put("/{order_id}/reject", response_model=OrderResponse)
 async def reject_order(
     order_id: str,
     reason: str = Query(..., description="Reason for rejection"),
-    current_user: User = Depends(require_roles(UserRole.ADMIN)),
-    db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(require_roles(UserRole.ADMIN))
 ):
     """Reject an order (Admin only)"""
-    result = await db.execute(
-        select(Order).where(Order.id == order_id)
-    )
-    order = result.scalar_one_or_none()
-    
+    order = await Order.get(order_id)
     if not order:
         raise NotFoundException("Order not found")
     
-    if order.status != "pending":
+    if order.status != OrderStatus.PENDING_CONFIRMATION:
         raise HTTPException(status_code=400, detail="Order cannot be rejected")
     
     # Update order status
-    order.status = "cancelled"
-    order.admin_notes = f"Rejected: {reason}"
+    order.status = OrderStatus.REJECTED
+    order.notes = f"Rejected: {reason}"
     order.updated_at = datetime.utcnow()
-    
-    await db.commit()
-    await db.refresh(order)
+    await order.save()
     
     # Send rejection notification
     notification_service = NotificationService()
     await notification_service.send_order_rejection_notification(order, reason)
     
-    return OrderResponse.from_orm(order)
+    return OrderResponse(
+        id=str(order.id),
+        customer_name=order.customer_name,
+        customer_email=order.customer_email,
+        customer_phone=order.customer_phone,
+        shipping_address=order.shipping_address,
+        items=order.items,
+        status=order.status,
+        payment_status=order.payment_status,
+        total_amount=order.total,
+        tracking_number=order.tracking_number,
+        notes=order.notes,
+        created_at=order.created_at,
+        updated_at=order.updated_at
+    )
 
 
 @router.put("/{order_id}/ship", response_model=OrderResponse)
 async def ship_order(
     order_id: str,
     tracking_number: str = Query(..., description="Tracking number"),
-    current_user: User = Depends(require_roles(UserRole.ADMIN)),
-    db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(require_roles(UserRole.ADMIN))
 ):
     """Mark order as shipped (Admin only)"""
-    result = await db.execute(
-        select(Order).where(Order.id == order_id)
-    )
-    order = result.scalar_one_or_none()
-    
+    order = await Order.get(order_id)
     if not order:
         raise NotFoundException("Order not found")
     
-    if order.payment_status != "completed":
+    if order.status != OrderStatus.PAID:
         raise HTTPException(status_code=400, detail="Order must be paid before shipping")
     
     # Update order status
-    order.status = "shipped"
+    order.status = OrderStatus.SHIPPED
     order.tracking_number = tracking_number
-    order.shipped_at = datetime.utcnow()
     order.updated_at = datetime.utcnow()
-    
-    await db.commit()
-    await db.refresh(order)
+    await order.save()
     
     # Send shipping notification
     notification_service = NotificationService()
     await notification_service.send_order_shipped_notification(order)
     
-    return OrderResponse.from_orm(order)
+    return OrderResponse(
+        id=str(order.id),
+        customer_name=order.customer_name,
+        customer_email=order.customer_email,
+        customer_phone=order.customer_phone,
+        shipping_address=order.shipping_address,
+        items=order.items,
+        status=order.status,
+        payment_status=order.payment_status,
+        total_amount=order.total,
+        tracking_number=order.tracking_number,
+        notes=order.notes,
+        created_at=order.created_at,
+        updated_at=order.updated_at
+    )

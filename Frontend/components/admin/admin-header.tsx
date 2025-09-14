@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { Bell, User, Settings, LogOut, Home, UserPlus } from "lucide-react"
+import { Bell, User, Settings, LogOut, Home } from "lucide-react"
 
 export function AdminHeader() {
   const notifications = 3
-  const userRole = typeof window !== 'undefined' ? localStorage.getItem('admin_role') : null
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -21,16 +20,6 @@ export function AdminHeader() {
 
         {/* Right side actions */}
         <div className="flex items-center space-x-4">
-          {/* Register Admin - Only show to super admins */}
-          {userRole === 'super_admin' && (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/admin/register">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Register Admin
-              </Link>
-            </Button>
-          )}
-
           {/* View Store */}
           <Button asChild variant="ghost" size="sm">
             <Link href="/" target="_blank">

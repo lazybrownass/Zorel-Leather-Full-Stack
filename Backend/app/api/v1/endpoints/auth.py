@@ -14,13 +14,13 @@ from app.core.security import (
 from app.models.sqlalchemy_models import User, UserRole
 from app.schemas.user import UserCreate, UserLogin, UserResponse, Token, UserUpdate
 from app.core.postgresql import get_db
-from app.core.exceptions import ConflictException, UnauthorizedException
+from app.core.exceptions import ConflictException, UnauthorizedException, InvalidCredentialsException, AccountDeactivatedException
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=Token)
 @limiter.limit("5/minute")
 async def register(request: Request, user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     """Register a new user"""
@@ -55,8 +55,15 @@ async def register(request: Request, user_data: UserCreate, db: AsyncSession = D
     await db.commit()
     await db.refresh(user)
     
-    # Return user without password hash
-    return UserResponse(
+    # Create access token for the new user
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email, "role": user.role.value},
+        expires_delta=access_token_expires
+    )
+    
+    # Return user info with token
+    user_response = UserResponse(
         id=str(user.id),
         name=user.name,
         email=user.email,
@@ -73,6 +80,13 @@ async def register(request: Request, user_data: UserCreate, db: AsyncSession = D
         created_at=user.created_at,
         updated_at=user.updated_at
     )
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        user=user_response
+    )
 
 
 @router.post("/login", response_model=Token)
@@ -85,15 +99,15 @@ async def login(request: Request, user_credentials: UserLogin, db: AsyncSession 
     
     # Check if user exists
     if not user:
-        raise UnauthorizedException("No account found with this email address. Please check your email or register for a new account.")
+        raise InvalidCredentialsException("No account found with this email address. Please check your email or register for a new account.")
     
     # Check if password is correct
     if not verify_password(user_credentials.password, user.password_hash):
-        raise UnauthorizedException("Incorrect password. Please check your password and try again.")
+        raise InvalidCredentialsException("Incorrect password. Please check your password and try again.")
     
     # Check if account is active
     if not user.is_active:
-        raise UnauthorizedException("Your account has been deactivated. Please contact support for assistance.")
+        raise AccountDeactivatedException("Your account has been deactivated. Please contact support for assistance.")
     
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

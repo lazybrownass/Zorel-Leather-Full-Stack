@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import logging
 from app.core.config import settings
 from app.services.notification_service import NotificationService

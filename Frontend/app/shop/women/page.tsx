@@ -1,12 +1,9 @@
-"use client"
-
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Heart, Filter, Grid, List, ArrowLeft, Loader2 } from "lucide-react"
+import { Heart, Filter, Grid, List, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -66,56 +63,11 @@ const womenProducts = [
 ]
 
 export default function WomenPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("All")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Get unique categories
-  const categories = ["All", ...Array.from(new Set(womenProducts.map(product => product.category)))]
-
-  // Filter products based on selected category
-  const filteredProducts = selectedCategory === "All" 
-    ? womenProducts 
-    : womenProducts.filter(product => product.category === selectedCategory)
-
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category)
-  }
-
-  // Simulate loading for seamless transition
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1200) // Slightly longer for better UX
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-amber-50/30 dark:from-rose-950/20 dark:via-amber-900/10 dark:to-rose-950/20 flex items-center justify-center animate-in fade-in duration-500">
-        <div className="text-center space-y-6">
-          <div className="relative">
-            <Loader2 className="h-16 w-16 animate-spin text-rose-800 dark:text-rose-200 mx-auto" />
-          </div>
-          <div className="space-y-2">
-            <p className="text-rose-800 dark:text-rose-200 font-semibold text-lg">Loading Women's Collection</p>
-            <p className="text-rose-600 dark:text-rose-400 text-sm">Curating elegant leather pieces...</p>
-          </div>
-          <div className="flex justify-center space-x-1">
-            <div className="w-2 h-2 bg-rose-600 dark:bg-rose-400 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-rose-600 dark:bg-rose-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-            <div className="w-2 h-2 bg-rose-600 dark:bg-rose-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="min-h-screen">
       <Header />
 
-      <div className="bg-gradient-to-br from-background via-background to-background/50">
+      <div className="bg-gradient-to-br from-rose-50 via-white to-amber-50/30">
         {/* Hero Section */}
         <div className="relative h-[40vh] bg-gradient-to-r from-rose-900 via-amber-800 to-rose-900 overflow-hidden">
           <div className="absolute inset-0 bg-black/40" />
@@ -153,9 +105,7 @@ export default function WomenPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
             <div>
               <h2 className="text-2xl font-serif font-bold text-foreground mb-2">Women's Leather Goods</h2>
-              <p className="text-muted-foreground">
-                {filteredProducts.length} {selectedCategory === "All" ? "exclusive pieces" : `${selectedCategory.toLowerCase()} items`} available for request
-              </p>
+              <p className="text-muted-foreground">{womenProducts.length} exclusive pieces available for request</p>
             </div>
 
             <div className="flex items-center gap-4">
@@ -168,20 +118,10 @@ export default function WomenPage() {
                 Filter
               </Button>
               <div className="flex border border-border rounded-lg overflow-hidden">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={viewMode === "grid" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent"}
-                  onClick={() => setViewMode("grid")}
-                >
+                <Button variant="ghost" size="sm" className="bg-accent text-foreground">
                   <Grid className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={viewMode === "list" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent"}
-                  onClick={() => setViewMode("list")}
-                >
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-accent">
                   <List className="w-4 h-4" />
                 </Button>
               </div>
@@ -190,52 +130,40 @@ export default function WomenPage() {
 
           {/* Category Filters */}
           <div className="flex flex-wrap gap-3 mb-8">
-            {categories.map((category) => (
-              <Badge
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                className={`px-4 py-2 cursor-pointer transition-all duration-200 ${
-                  selectedCategory === category
-                    ? "bg-primary hover:bg-primary/90 text-primary-foreground"
-                    : "border-border text-foreground hover:bg-accent"
-                }`}
-                onClick={() => handleCategoryChange(category)}
-              >
-                {category === "All" ? "All Items" : category}
-              </Badge>
-            ))}
+            <Badge variant="default" className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2">
+              All Items
+            </Badge>
+            <Badge variant="outline" className="border-border text-foreground hover:bg-accent px-4 py-2 cursor-pointer">
+              Handbags
+            </Badge>
+            <Badge variant="outline" className="border-border text-foreground hover:bg-accent px-4 py-2 cursor-pointer">
+              Shoes
+            </Badge>
+            <Badge variant="outline" className="border-border text-foreground hover:bg-accent px-4 py-2 cursor-pointer">
+              Accessories
+            </Badge>
           </div>
 
           {/* Products Grid */}
-          <div className={`grid gap-8 ${
-            viewMode === "grid" 
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
-              : "grid-cols-1"
-          }`}>
-            {filteredProducts.map((product) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {womenProducts.map((product) => (
               <Card
                 key={product.id}
-                className={`group overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-card/80 backdrop-blur-sm ${
-                  viewMode === "list" ? "flex flex-row" : ""
-                }`}
+                className="group overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-card/80 backdrop-blur-sm"
               >
-                <div className={`relative overflow-hidden ${
-                  viewMode === "list" ? "w-80 h-64 flex-shrink-0" : ""
-                }`}>
+                <div className="relative overflow-hidden">
                   <Image
                     src={product.image || "/placeholder.svg"}
                     alt={product.name}
                     width={400}
                     height={400}
-                    className={`object-cover group-hover:scale-110 transition-transform duration-700 ${
-                      viewMode === "list" ? "w-full h-full" : "w-full h-80"
-                    }`}
+                    className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                   {/* Badges */}
                   <div className="absolute top-4 left-4 flex flex-col gap-2">
-                    {product.isNew && <Badge className="bg-pink-600 text-white shadow-lg">New</Badge>}
+                    {product.isNew && <Badge className="bg-primary text-primary-foreground shadow-lg">New</Badge>}
                     {product.originalPrice && (
                       <Badge variant="destructive" className="shadow-lg">
                         Sale
@@ -262,77 +190,56 @@ export default function WomenPage() {
                   </div>
                 </div>
 
-                <CardContent className={`p-6 ${viewMode === "list" ? "flex-1 flex flex-col justify-between" : ""}`}>
-                  <div>
-                    <div className="mb-3">
-                      <Badge variant="outline" className="text-xs text-muted-foreground border-border">
-                        {product.category}
-                      </Badge>
-                    </div>
-
-                    <h3 className={`font-serif font-semibold text-foreground mb-2 group-hover:text-primary transition-colors ${
-                      viewMode === "list" ? "text-xl" : "text-lg"
-                    }`}>
-                      {product.name}
-                    </h3>
-
-                    <div className="flex items-center gap-2 mb-3">
-                      {product.originalPrice ? (
-                        <>
-                          <span className={`font-bold text-foreground ${viewMode === "list" ? "text-2xl" : "text-2xl"}`}>
-                            ${product.price}
-                          </span>
-                          <span className="text-lg text-muted-foreground line-through">${product.originalPrice}</span>
-                        </>
-                      ) : (
-                        <span className={`font-bold text-foreground ${viewMode === "list" ? "text-2xl" : "text-2xl"}`}>
-                          ${product.price}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Available in:</span>
-                      <div className="flex gap-1">
-                        {product.colors.map((color) => (
-                          <div
-                            key={color}
-                            className={`w-4 h-4 rounded-full border-2 border-white shadow-sm ${
-                              color === "Brown"
-                                ? "bg-amber-800"
-                                : color === "Black"
-                                  ? "bg-gray-900"
-                                  : color === "Burgundy"
-                                    ? "bg-red-900"
-                                    : color === "Camel"
-                                      ? "bg-amber-600"
-                                      : color === "Nude"
-                                        ? "bg-amber-200"
-                                        : color === "Cognac"
-                                          ? "bg-amber-700"
-                                          : color === "Gold"
-                                            ? "bg-yellow-600"
-                                            : "bg-gray-400"
-                            }`}
-                            title={color}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                <CardContent className="p-6">
+                  <div className="mb-3">
+                    <Badge variant="outline" className="text-xs text-muted-foreground border-border">
+                      {product.category}
+                    </Badge>
                   </div>
 
-                  {viewMode === "list" && (
-                    <div className="mt-4">
-                      <Link href={`/product/${product.name.toLowerCase().replace(/\s+/g, "-")}`}>
-                        <Button
-                          size="sm"
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                        >
-                          Request Availability
-                        </Button>
-                      </Link>
+                  <h3 className="font-serif font-semibold text-lg text-foreground mb-2 group-hover:text-primary transition-colors">
+                    {product.name}
+                  </h3>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    {product.originalPrice ? (
+                      <>
+                        <span className="text-2xl font-bold text-foreground">${product.price}</span>
+                        <span className="text-lg text-muted-foreground line-through">${product.originalPrice}</span>
+                      </>
+                    ) : (
+                      <span className="text-2xl font-bold text-foreground">${product.price}</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Available in:</span>
+                    <div className="flex gap-1">
+                      {product.colors.map((color) => (
+                        <div
+                          key={color}
+                          className={`w-4 h-4 rounded-full border-2 border-white shadow-sm ${
+                            color === "Brown"
+                              ? "bg-amber-800"
+                              : color === "Black"
+                                ? "bg-gray-900"
+                                : color === "Burgundy"
+                                  ? "bg-red-900"
+                                  : color === "Camel"
+                                    ? "bg-amber-600"
+                                    : color === "Nude"
+                                      ? "bg-amber-200"
+                                      : color === "Cognac"
+                                        ? "bg-amber-700"
+                                        : color === "Gold"
+                                          ? "bg-yellow-600"
+                                          : "bg-gray-400"
+                          }`}
+                          title={color}
+                        />
+                      ))}
                     </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
             ))}

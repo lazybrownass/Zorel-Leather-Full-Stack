@@ -65,44 +65,12 @@ export default function RequestCheckoutPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    try {
-      // Create order request
-      const orderData = {
-        items: requestItems.map(item => ({
-          product_id: item.id.toString(),
-          product_name: item.name,
-          product_image: item.image,
-          quantity: item.quantity,
-          price: 0, // Will be confirmed later
-          notes: formData.notes
-        })),
-        shipping_address: {
-          name: `${formData.firstName} ${formData.lastName}`,
-          street: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zip_code: formData.postalCode,
-          country: formData.country,
-          phone: formData.phone
-        },
-        notes: formData.notes,
-        contact_method: formData.contactMethod,
-        urgency: formData.urgency
-      }
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Submit order request
-      const response = await apiClient.createOrder(orderData)
-      
-      // Redirect to status page
-      router.push(`/request/status/${response.id}`)
-      
-    } catch (error) {
-      console.error('Error submitting request:', error)
-      // Handle error - could show a toast notification
-      alert('Failed to submit request. Please try again.')
-    } finally {
-      setIsSubmitting(false)
-    }
+    // Generate request ID and redirect to status page
+    const requestId = "RID" + Math.random().toString(36).substr(2, 9).toUpperCase()
+    router.push(`/request/status/${requestId}`)
   }
 
   const totalItems = requestItems.reduce((sum, item) => sum + item.quantity, 0)

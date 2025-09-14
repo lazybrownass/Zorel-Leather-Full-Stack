@@ -1,11 +1,12 @@
 from typing import List, Optional
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query, HTTPException
+import logging
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.models.sqlalchemy_models import User, UserRole, Order, OrderStatus, PaymentStatus, Product, Notification
+from app.models.sqlalchemy_models import User, UserRole, Order, OrderItem, OrderStatus, PaymentStatus, Product, Notification
 from app.schemas.user import UserResponse
-from app.schemas.order import OrderResponse
+from app.schemas.order import OrderResponse, OrderItemResponse
 from app.schemas.product import ProductResponse
 from app.schemas.notification import NotificationResponse
 from app.core.security import require_roles
@@ -16,6 +17,7 @@ from sqlalchemy import select, func, and_, or_, desc
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger(__name__)
 
 
 @router.get("/dashboard/stats")
@@ -324,39 +326,67 @@ async def get_sales_report(
 
 @router.get("/requests", response_model=List[OrderResponse])
 async def get_all_requests(
-    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)),
     status: Optional[OrderStatus] = Query(None),
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100)
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db)
 ):
-    """Get all requests/orders (Admin only) - alias for orders endpoint"""
-    query = {}
-    if status:
-        query["status"] = status
-    
-    skip = (page - 1) * limit
-    orders = await Order.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list()
-    
-    return [
-        OrderResponse(
-            id=str(order.id),
-            user_id=order.user_id,
-            items=order.items,
-            shipping_address=order.shipping_address,
-            status=order.status,
-            payment_status=order.payment_status,
-            subtotal=order.subtotal,
-            shipping_cost=order.shipping_cost,
-            tax=order.tax,
-            total=order.total,
-            payment_intent_id=order.payment_intent_id,
-            tracking_number=order.tracking_number,
-            notes=order.notes,
-            created_at=order.created_at,
-            updated_at=order.updated_at
-        )
-        for order in orders
-    ]
+    """Get all product requests/orders (Admin only)"""
+    try:
+        # Build query
+        query = select(Order)
+        
+        if status:
+            query = query.where(Order.status == status)
+        
+        # Apply pagination
+        offset = (page - 1) * limit
+        query = query.offset(offset).limit(limit).order_by(Order.created_at.desc())
+        
+        result = await db.execute(query)
+        orders = result.scalars().all()
+        
+        # Convert to response format
+        order_responses = []
+        for order in orders:
+            # Get order items
+            items_result = await db.execute(
+                select(OrderItem).where(OrderItem.order_id == order.id)
+            )
+            items = items_result.scalars().all()
+            
+            items_response = [
+                OrderItemResponse(
+                    id=str(item.id),
+                    product_id=str(item.product_id),
+                    quantity=item.quantity,
+                    price=item.price
+                )
+                for item in items
+            ]
+            
+            order_responses.append(OrderResponse(
+                id=str(order.id),
+                customer_name=order.customer_name,
+                customer_email=order.customer_email,
+                customer_phone=order.customer_phone,
+                shipping_address=order.shipping_address,
+                items=items_response,
+                status=order.status,
+                payment_status=order.payment_status,
+                payment_method=order.payment_method,
+                total_amount=order.total_amount,
+                tracking_number=order.tracking_number,
+                notes=order.customer_notes,
+                created_at=order.created_at,
+                updated_at=order.updated_at
+            ))
+        
+        return order_responses
+    except Exception as e:
+        logger.error(f"Error in get_all_requests: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 

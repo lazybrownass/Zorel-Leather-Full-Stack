@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, Union
 import jwt
-from jwt.exceptions import InvalidTokenError
+from jwt.exceptions import InvalidTokenError, DecodeError
 from passlib.context import CryptContext
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -51,7 +51,7 @@ def verify_token(token: str) -> Optional[dict]:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
-    except InvalidTokenError:
+    except (InvalidTokenError, DecodeError):
         return None
 
 

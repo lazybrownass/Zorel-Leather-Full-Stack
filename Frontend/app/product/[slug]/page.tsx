@@ -8,6 +8,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { Heart, Share2, Star } from "lucide-react"
 import { RequestModal } from "@/components/request-modal"
+import { apiClient } from "@/lib/api"
+import { notFound } from "next/navigation"
 
 interface ProductPageProps {
   params: {
@@ -15,39 +17,54 @@ interface ProductPageProps {
   }
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
-  // In a real app, this would fetch product data based on the slug
-  const product = {
-    id: 1,
-    name: "Executive Leather Briefcase",
-    category: "Men",
-    price: "Request Price",
-    images: [
+async function getProduct(slug: string) {
+  try {
+    const product = await apiClient.getProductBySlug(slug)
+    return product
+  } catch (error) {
+    console.error("Error fetching product:", error)
+    return null
+  }
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const product = await getProduct(params.slug)
+  
+  if (!product) {
+    notFound()
+  }
+
+  // Transform backend data to match frontend expectations
+  const transformedProduct = {
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    price: product.price ? `$${product.price}` : "Request Price",
+    images: product.images && product.images.length > 0 ? product.images : [
       "/luxury-brown-leather-briefcase-front-view.jpg",
       "/luxury-brown-leather-briefcase-side-view.jpg",
       "/luxury-brown-leather-briefcase-interior-view.jpg",
       "/luxury-brown-leather-briefcase-detail-view.jpg",
     ],
-    description:
-      "Crafted from premium full-grain leather, this executive briefcase combines timeless elegance with modern functionality. Each piece is handmade by our master craftsmen using traditional techniques passed down through generations.",
-    features: [
-      "Premium full-grain leather construction",
-      "Hand-stitched with waxed thread",
-      "Multiple interior compartments",
-      "Laptop compartment fits up to 15 inches",
-      "Brass hardware with antique finish",
-      "Adjustable shoulder strap included",
+    description: product.description || "Premium quality product crafted with attention to detail.",
+    features: product.features || [
+      "Premium quality materials",
+      "Handcrafted excellence",
+      "Timeless design",
+      "Durable construction",
     ],
-    specifications: {
-      Dimensions: "16 × 12 × 4 inches",
-      Weight: "3.2 lbs",
-      Material: "Full-grain leather",
-      Hardware: "Antique brass",
-      Lining: "Cotton canvas",
+    specifications: product.specifications || {
+      Material: "Premium materials",
       Origin: "Handcrafted",
     },
     availability: "Request to confirm availability",
-    variants: [
+    variants: product.colors ? product.colors.map((color: string, index: number) => ({
+      id: index + 1,
+      name: color,
+      color: color === "Brown" ? "#8B4513" : 
+             color === "Black" ? "#000000" : 
+             color === "Cognac" ? "#A0522D" : "#8B4513"
+    })) : [
       { id: 1, name: "Classic Brown", color: "#8B4513" },
       { id: 2, name: "Cognac", color: "#A0522D" },
       { id: 3, name: "Black", color: "#000000" },
@@ -69,25 +86,25 @@ export default function ProductPage({ params }: ProductPageProps) {
             Shop
           </Link>
           <span>/</span>
-          <Link href={`/shop/${product.category.toLowerCase()}`} className="hover:text-primary">
-            {product.category}
+          <Link href={`/shop/${transformedProduct.category.toLowerCase()}`} className="hover:text-primary">
+            {transformedProduct.category}
           </Link>
           <span>/</span>
-          <span className="text-foreground">{product.name}</span>
+          <span className="text-foreground">{transformedProduct.name}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
             <div className="aspect-square relative overflow-hidden rounded-lg">
-              <Image src={product.images[0] || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
+              <Image src={transformedProduct.images[0] || "/placeholder.svg"} alt={transformedProduct.name} fill className="object-cover" />
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
+              {transformedProduct.images.map((image, index) => (
                 <div key={index} className="aspect-square relative overflow-hidden rounded-md cursor-pointer">
                   <Image
                     src={image || "/placeholder.svg"}
-                    alt={`${product.name} view ${index + 1}`}
+                    alt={`${transformedProduct.name} view ${index + 1}`}
                     fill
                     className="object-cover"
                   />
@@ -99,8 +116,8 @@ export default function ProductPage({ params }: ProductPageProps) {
           {/* Product Details */}
           <div className="space-y-6">
             <div>
-              <Badge className="mb-2">{product.category}</Badge>
-              <h1 className="font-serif text-3xl font-bold mb-4">{product.name}</h1>
+              <Badge className="mb-2">{transformedProduct.category}</Badge>
+              <h1 className="font-serif text-3xl font-bold mb-4">{transformedProduct.name}</h1>
               <div className="flex items-center space-x-4 mb-4">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
@@ -109,8 +126,8 @@ export default function ProductPage({ params }: ProductPageProps) {
                   <span className="ml-2 text-sm text-muted-foreground">(24 reviews)</span>
                 </div>
               </div>
-              <p className="text-2xl font-bold text-primary mb-4">{product.price}</p>
-              <p className="text-sm text-muted-foreground mb-6">{product.availability}</p>
+              <p className="text-2xl font-bold text-primary mb-4">{transformedProduct.price}</p>
+              <p className="text-sm text-muted-foreground mb-6">{transformedProduct.availability}</p>
             </div>
 
             <Separator />
@@ -119,7 +136,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             <div>
               <h3 className="font-semibold mb-3">Available Colors</h3>
               <div className="flex space-x-2">
-                {product.variants.map((variant) => (
+                {transformedProduct.variants.map((variant) => (
                   <button
                     key={variant.id}
                     className="w-8 h-8 rounded-full border-2 border-border hover:border-primary transition-colors"
@@ -134,7 +151,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
             {/* Actions */}
             <div className="space-y-3">
-              <RequestModal product={product} />
+              <RequestModal product={transformedProduct} />
               <div className="flex space-x-2">
                 <Button variant="outline" size="icon">
                   <Heart className="h-4 w-4" />
@@ -155,11 +172,11 @@ export default function ProductPage({ params }: ProductPageProps) {
                 <TabsTrigger value="specifications">Specifications</TabsTrigger>
               </TabsList>
               <TabsContent value="description" className="mt-4">
-                <p className="text-muted-foreground luxury-text">{product.description}</p>
+                <p className="text-muted-foreground luxury-text">{transformedProduct.description}</p>
               </TabsContent>
               <TabsContent value="features" className="mt-4">
                 <ul className="space-y-2">
-                  {product.features.map((feature, index) => (
+                  {transformedProduct.features.map((feature, index) => (
                     <li key={index} className="flex items-start">
                       <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0" />
                       <span className="text-muted-foreground">{feature}</span>
@@ -169,7 +186,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               </TabsContent>
               <TabsContent value="specifications" className="mt-4">
                 <div className="space-y-3">
-                  {Object.entries(product.specifications).map(([key, value]) => (
+                  {Object.entries(transformedProduct.specifications).map(([key, value]) => (
                     <div key={key} className="flex justify-between">
                       <span className="font-medium">{key}:</span>
                       <span className="text-muted-foreground">{value}</span>

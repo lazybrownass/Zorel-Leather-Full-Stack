@@ -126,6 +126,23 @@ async def get_categories(request: Request, db: AsyncSession = Depends(get_db)):
     return {"categories": categories}
 
 
+@router.get("/slug/{slug}", response_model=ProductResponse)
+@limiter.limit("60/minute")
+async def get_product_by_slug(
+    slug: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get a specific product by slug"""
+    result = await db.execute(select(Product).where(Product.slug == slug, Product.is_active == True))
+    product = result.scalar_one_or_none()
+    
+    if not product:
+        raise NotFoundException("Product not found")
+    
+    return ProductResponse.from_orm(product)
+
+
 @router.get("/{product_id}", response_model=ProductResponse)
 @limiter.limit("60/minute")
 async def get_product(

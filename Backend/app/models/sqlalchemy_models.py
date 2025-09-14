@@ -75,6 +75,7 @@ class Product(Base):
     
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False, index=True)
+    slug = Column(String(255), unique=True, nullable=True, index=True)
     description = Column(Text, nullable=True)
     price = Column(Float, nullable=False)
     original_price = Column(Float, nullable=True)
@@ -108,6 +109,9 @@ class Order(Base):
     
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    customer_name = Column(String(255), nullable=False)
+    customer_email = Column(String(255), nullable=False)
+    customer_phone = Column(String(50), nullable=True)
     order_number = Column(String(50), unique=True, nullable=False, index=True)
     status = Column(Enum(OrderStatus), default=OrderStatus.PENDING, nullable=False)
     total_amount = Column(Float, nullable=False)

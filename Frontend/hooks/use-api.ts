@@ -348,6 +348,13 @@ export function useAdminRequests(page = 1, limit = 20) {
   )
 }
 
+export function useProductRequests(page = 1, limit = 20, status?: string) {
+  return useApi(
+    () => apiClient.getProductRequests(page, limit, status),
+    [page, limit, status]
+  )
+}
+
 // File upload hook
 export function useFileUpload() {
   const [loading, setLoading] = useState(false)

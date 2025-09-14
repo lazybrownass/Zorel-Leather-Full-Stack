@@ -43,7 +43,7 @@ export default function HomePage() {
     {
       name: "Accessories",
       description: "Premium leather accessories to complete your style",
-      image: heroImages[2] || "/leather-accessories-wallets-belts-and-small-goods.jpg",
+      image: "/image_1.png",
       href: "/shop/accessories",
       items: "30+ Products",
       featured: "Wallets, Belts, Keychains, Travel"
@@ -108,14 +108,34 @@ export default function HomePage() {
 
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden bg-amber-900">
         <div className="absolute inset-0 z-0">
-          <Image
-            src={heroImages[0] || "/luxury-mens-leather-goods-collection-hero-banner.jpg"}
-            alt="ZOREL LEATHER luxury collection"
-            fill
-            className="object-cover scale-110 animate-slow-zoom"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/70" />
+          {/* Video Background */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 w-full h-full object-cover scale-110 hero-video"
+            poster={heroImages[0] || "/luxury-mens-leather-goods-collection-hero-banner.jpg"}
+            onError={(e) => {
+              console.log('Video failed to load, falling back to image');
+              e.currentTarget.style.display = 'none';
+            }}
+          >
+            <source src="/ElectricBlaze.mp4" type="video/mp4" />
+            {/* Fallback image for browsers that don't support video */}
+            <Image
+              src={heroImages[0] || "/luxury-mens-leather-goods-collection-hero-banner.jpg"}
+              alt="ZOREL LEATHER luxury collection"
+              fill
+              className="object-cover scale-110"
+              priority
+            />
+          </video>
+          {/* Enhanced gradient overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/80" />
+          {/* Subtle animated overlay for extra visual interest */}
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-transparent to-amber-800/20 animate-pulse-slow" />
         </div>
         <div className="relative z-10 text-center text-white max-w-5xl mx-auto px-4">
           <div className="animate-fade-in-up">
@@ -149,8 +169,25 @@ export default function HomePage() {
 
 
       {/* Enhanced Features Section */}
-      <section className="py-20 bg-gradient-to-br from-amber-50 via-white to-amber-50/30">
-        <div className="container mx-auto px-4">
+      <section className="py-20 bg-gradient-to-br from-amber-50 via-white to-amber-50/30 relative overflow-hidden">
+        {/* Subtle particle effect background */}
+        <div className="absolute inset-0 opacity-5">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 w-full h-full object-cover particle-video"
+            onError={(e) => {
+              console.log('Particle video failed to load');
+              e.currentTarget.style.display = 'none';
+            }}
+          >
+            <source src="/ExplosiveParticles.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
             <h2 className="font-serif text-5xl font-bold mb-6 text-amber-900 luxury-gradient-text">
               Why Choose ZOREL LEATHER

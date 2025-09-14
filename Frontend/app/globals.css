@@ -4,24 +4,24 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to luxury leather brand colors - warm browns and gold */
+  /* Updated to luxury leather brand colors - warm browns and gold with better contrast */
   --background: #ffffff;
-  --foreground: #b58a5d;
+  --foreground: #2c1810;
   --card: #f7f1e3;
-  --card-foreground: #b58a5d;
+  --card-foreground: #2c1810;
   --popover: #ffffff;
-  --popover-foreground: #b58a5d;
+  --popover-foreground: #2c1810;
   --primary: #b58a5d;
   --primary-foreground: #ffffff;
   --secondary: #d4af37;
-  --secondary-foreground: #ffffff;
-  --muted: #b59a7e;
-  --muted-foreground: #ffffff;
+  --secondary-foreground: #2c1810;
+  --muted: #f7f1e3;
+  --muted-foreground: #6b5b47;
   --accent: #d4af37;
-  --accent-foreground: #ffffff;
+  --accent-foreground: #2c1810;
   --destructive: #be123c;
   --destructive-foreground: #ffffff;
-  --border: #b58a5d;
+  --border: #d4c4b0;
   --input: #f7f1e3;
   --ring: rgba(212, 175, 55, 0.5);
   --chart-1: #b58a5d;
@@ -31,12 +31,12 @@
   --chart-5: #be123c;
   --radius: 0.5rem;
   --sidebar: #f7f1e3;
-  --sidebar-foreground: #b58a5d;
+  --sidebar-foreground: #2c1810;
   --sidebar-primary: #d4af37;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary-foreground: #2c1810;
   --sidebar-accent: #b58a5d;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #b58a5d;
+  --sidebar-border: #d4c4b0;
   --sidebar-ring: rgba(212, 175, 55, 0.5);
 }
 
@@ -266,6 +266,124 @@
     animation: pulse-slow 3s ease-in-out infinite;
   }
 
+  /* Video background enhancements */
+  video {
+    filter: brightness(0.8) contrast(1.1);
+  }
+
+  .hero-video {
+    filter: brightness(0.7) contrast(1.2) saturate(1.1);
+  }
+
+  .particle-video {
+    filter: blur(1px) brightness(0.3) contrast(0.8);
+  }
+
+  /* Enhanced text visibility for light mode */
+  .light-mode-text {
+    color: #2c1810 !important;
+  }
+
+  .light-mode-text-muted {
+    color: #6b5b47 !important;
+  }
+
+  .light-mode-text-secondary {
+    color: #8b7355 !important;
+  }
+
+  /* Ensure proper contrast for all text elements */
+  body {
+    color: var(--foreground);
+  }
+
+  /* Override any low-contrast text in light mode */
+  .dark .text-amber-700\/80 {
+    color: rgba(181, 138, 93, 0.8) !important;
+  }
+
+  :not(.dark) .text-amber-700\/80 {
+    color: rgba(44, 24, 16, 0.8) !important;
+  }
+
+  /* Ensure headings are always visible */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--foreground);
+  }
+
+  /* Better contrast for muted text */
+  .text-muted-foreground {
+    color: var(--muted-foreground);
+  }
+
+  /* Ensure all text elements have proper contrast in light mode */
+  :not(.dark) p, :not(.dark) span, :not(.dark) div {
+    color: var(--foreground);
+  }
+
+  /* Override any problematic text colors in light mode */
+  :not(.dark) .text-amber-600 {
+    color: #8b7355 !important;
+  }
+
+  :not(.dark) .text-amber-700 {
+    color: #6b5b47 !important;
+  }
+
+  :not(.dark) .text-amber-800 {
+    color: #4a3426 !important;
+  }
+
+  /* Ensure form elements are visible */
+  :not(.dark) input, :not(.dark) textarea, :not(.dark) select {
+    color: var(--foreground);
+    background-color: var(--input);
+  }
+
+  /* Better contrast for links */
+  :not(.dark) a {
+    color: var(--primary);
+  }
+
+  :not(.dark) a:hover {
+    color: var(--accent);
+  }
+
+  /* Additional text visibility improvements */
+  :not(.dark) .text-foreground\/70 {
+    color: rgba(44, 24, 16, 0.7) !important;
+  }
+
+  :not(.dark) .text-foreground\/80 {
+    color: rgba(44, 24, 16, 0.8) !important;
+  }
+
+  :not(.dark) .text-foreground\/90 {
+    color: rgba(44, 24, 16, 0.9) !important;
+  }
+
+  /* Ensure proper contrast for any remaining amber text variants */
+  :not(.dark) .text-amber-500 {
+    color: #a68b5b !important;
+  }
+
+  :not(.dark) .text-amber-400 {
+    color: #c4a574 !important;
+  }
+
+  /* Better contrast for any gray text that might be used */
+  :not(.dark) .text-gray-600 {
+    color: #6b5b47 !important;
+  }
+
+  :not(.dark) .text-gray-700 {
+    color: #4a3426 !important;
+  }
+
+  :not(.dark) .text-gray-800 {
+    color: #2c1810 !important;
+  }
+
   .animation-delay-150 {
     animation-delay: 150ms;
   }
@@ -284,6 +402,19 @@
 
   .animation-delay-600 {
     animation-delay: 600ms;
+  }
+
+  /* WhatsApp button pulse animation */
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+    }
+    50% {
+      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.8);
+    }
+    100% {
+      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+    }
   }
 }
 

@@ -28,6 +28,21 @@ class UnauthorizedException(CustomHTTPException):
         super().__init__(status_code=401, detail=detail, error_code="UNAUTHORIZED")
 
 
+class AuthenticationException(CustomHTTPException):
+    def __init__(self, detail: str = "Authentication failed"):
+        super().__init__(status_code=401, detail=detail, error_code="AUTHENTICATION_FAILED")
+
+
+class InvalidCredentialsException(CustomHTTPException):
+    def __init__(self, detail: str = "Invalid credentials"):
+        super().__init__(status_code=401, detail=detail, error_code="INVALID_CREDENTIALS")
+
+
+class AccountDeactivatedException(CustomHTTPException):
+    def __init__(self, detail: str = "Account deactivated"):
+        super().__init__(status_code=401, detail=detail, error_code="ACCOUNT_DEACTIVATED")
+
+
 class ForbiddenException(CustomHTTPException):
     def __init__(self, detail: str = "Forbidden"):
         super().__init__(status_code=403, detail=detail, error_code="FORBIDDEN")

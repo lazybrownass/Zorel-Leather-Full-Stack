@@ -1,11 +1,26 @@
 from typing import Optional
 from datetime import datetime
-from app.models.inventory import Inventory, InventoryUpdate, InventoryStatus, InventoryMovement
+# from app.models.inventory import Inventory, InventoryUpdate, InventoryStatus, InventoryMovement  # TODO: Implement inventory models
 from app.models.sqlalchemy_models import Product
 from app.core.exceptions import NotFoundException, ValidationException
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Placeholder classes until inventory models are implemented
+class Inventory:
+    pass
+
+class InventoryUpdate:
+    pass
+
+class InventoryStatus:
+    IN_STOCK = "in_stock"
+    OUT_OF_STOCK = "out_of_stock"
+    LOW_STOCK = "low_stock"
+
+class InventoryMovement:
+    pass
 
 
 class InventoryService:

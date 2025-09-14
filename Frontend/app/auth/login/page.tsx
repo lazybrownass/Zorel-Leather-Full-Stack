@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/hooks/use-api"
 import { GoogleOAuthButton } from "@/components/auth/google-oauth-button"
+import { getUserFriendlyErrorMessage } from "@/lib/error-utils"
 import { toast } from "sonner"
 
 export default function LoginPage() {
@@ -29,7 +30,7 @@ export default function LoginPage() {
       toast.success("Welcome back!")
       router.push("/")
     } catch (error: any) {
-      toast.error(error.message || "Login failed")
+      toast.error(getUserFriendlyErrorMessage(error))
     } finally {
       setLoading(false)
     }
