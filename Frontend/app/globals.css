@@ -1,0 +1,301 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated to luxury leather brand colors - warm browns and gold */
+  --background: #ffffff;
+  --foreground: #b58a5d;
+  --card: #f7f1e3;
+  --card-foreground: #b58a5d;
+  --popover: #ffffff;
+  --popover-foreground: #b58a5d;
+  --primary: #b58a5d;
+  --primary-foreground: #ffffff;
+  --secondary: #d4af37;
+  --secondary-foreground: #ffffff;
+  --muted: #b59a7e;
+  --muted-foreground: #ffffff;
+  --accent: #d4af37;
+  --accent-foreground: #ffffff;
+  --destructive: #be123c;
+  --destructive-foreground: #ffffff;
+  --border: #b58a5d;
+  --input: #f7f1e3;
+  --ring: rgba(212, 175, 55, 0.5);
+  --chart-1: #b58a5d;
+  --chart-2: #d4af37;
+  --chart-3: #b59a7e;
+  --chart-4: #ffffff;
+  --chart-5: #be123c;
+  --radius: 0.5rem;
+  --sidebar: #f7f1e3;
+  --sidebar-foreground: #b58a5d;
+  --sidebar-primary: #d4af37;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #b58a5d;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #b58a5d;
+  --sidebar-ring: rgba(212, 175, 55, 0.5);
+}
+
+.dark {
+  /* Dark mode with luxury leather theme */
+  --background: #2c1810;
+  --foreground: #f7f1e3;
+  --card: #3d2518;
+  --card-foreground: #f7f1e3;
+  --popover: #2c1810;
+  --popover-foreground: #f7f1e3;
+  --primary: #d4af37;
+  --primary-foreground: #2c1810;
+  --secondary: #b58a5d;
+  --secondary-foreground: #ffffff;
+  --muted: #4a3426;
+  --muted-foreground: #b59a7e;
+  --accent: #d4af37;
+  --accent-foreground: #2c1810;
+  --destructive: #be123c;
+  --destructive-foreground: #ffffff;
+  --border: #4a3426;
+  --input: #3d2518;
+  --ring: rgba(212, 175, 55, 0.3);
+  --chart-1: #d4af37;
+  --chart-2: #b58a5d;
+  --chart-3: #b59a7e;
+  --chart-4: #f7f1e3;
+  --chart-5: #be123c;
+  --sidebar: #3d2518;
+  --sidebar-foreground: #f7f1e3;
+  --sidebar-primary: #d4af37;
+  --sidebar-primary-foreground: #2c1810;
+  --sidebar-accent: #b58a5d;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #4a3426;
+  --sidebar-ring: rgba(212, 175, 55, 0.3);
+}
+
+@theme inline {
+  /* Added luxury fonts - Playfair Display for headings, Source Sans Pro for body */
+  --font-sans: "Source Sans Pro", var(--font-geist-sans);
+  --font-serif: "Playfair Display", serif;
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans transition-colors duration-300;
+  }
+  
+  /* Ensure smooth theme transitions */
+  * {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Enhanced luxury typography and animations */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif;
+  }
+
+  .luxury-text {
+    @apply text-balance leading-relaxed;
+  }
+
+  .brand-gradient {
+    background: linear-gradient(135deg, #b58a5d 0%, #d4af37 100%);
+  }
+
+  /* Luxury animations and effects */
+  .luxury-hover {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .luxury-hover:hover {
+    @apply transform scale-105 shadow-2xl;
+  }
+
+  .luxury-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border shadow-xl;
+  }
+
+  .luxury-button {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105;
+  }
+
+  .luxury-input {
+    @apply bg-background/70 backdrop-blur-sm border-border focus:border-primary focus:ring-primary/20 shadow-sm;
+  }
+
+  .glass-effect {
+    @apply bg-background/10 backdrop-blur-md border border-border/20;
+  }
+
+  /* Enhanced text shadow for better contrast */
+  .text-shadow {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  .luxury-gradient-text {
+    background: linear-gradient(135deg, #b58a5d 0%, #d4af37 50%, #b58a5d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Added stronger drop shadow utilities for better text contrast */
+  .drop-shadow-lg {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+  }
+
+  .drop-shadow-md {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/20;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
+
+  /* Added custom animations for luxury feel */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slow-zoom {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes pulse-slow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.8s ease-out forwards;
+  }
+
+  .animate-slow-zoom {
+    animation: slow-zoom 20s ease-in-out infinite alternate;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+
+  .animation-delay-150 {
+    animation-delay: 150ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+}
+
+/* Added RTL support for Arabic */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="rtl"] .rtl\:text-right {
+  text-align: right;
+}
+
+[dir="rtl"] .rtl\:ml-auto {
+  margin-left: auto;
+}
