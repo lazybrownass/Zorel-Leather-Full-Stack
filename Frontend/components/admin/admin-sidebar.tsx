@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Shield,
   UserPlus,
+  MessageSquare,
 } from "lucide-react"
 
 export function AdminSidebar() {
@@ -59,6 +60,12 @@ export function AdminSidebar() {
       href: "/admin/customers",
       icon: Users,
       current: pathname.startsWith("/admin/customers"),
+    },
+    {
+      name: "WhatsApp",
+      href: "/admin/whatsapp",
+      icon: MessageSquare,
+      current: pathname.startsWith("/admin/whatsapp"),
     },
     {
       name: "Admin Approvals",

@@ -4,7 +4,10 @@ from typing import Optional, Dict, Any
 import logging
 from app.core.config import settings
 from app.services.notification_service import NotificationService
+from app.services.whatsapp_service import whatsapp_service
 from app.models.sqlalchemy_models import User, Product
+from app.core.postgresql import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
 import re
 
 logger = logging.getLogger(__name__)
@@ -315,3 +318,49 @@ async def send_whatsapp_message(
     except Exception as e:
         logger.error(f"Error sending WhatsApp message: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to send message")
+
+@router.post("/send-product-catalog")
+async def send_product_catalog(
+    to: str,
+    category: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """Send product catalog via WhatsApp"""
+    try:
+        # Get products based on category
+        if category:
+            result = await db.execute(select(Product).where(Product.category == category, Product.is_active == True))
+        else:
+            result = await db.execute(select(Product).where(Product.is_active == True).limit(10))
+        
+        products = result.scalars().all()
+        success = await whatsapp_service.send_product_catalog(to, products, category)
+        
+        if success:
+            return {"status": "success", "message": "Product catalog sent successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send product catalog")
+            
+    except Exception as e:
+        logger.error(f"Error sending product catalog: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send product catalog")
+
+@router.post("/send-template")
+async def send_template_message(
+    to: str,
+    template_name: str,
+    language_code: str = "en",
+    components: Optional[List[Dict]] = None
+):
+    """Send a WhatsApp template message"""
+    try:
+        success = await whatsapp_service.send_template_message(to, template_name, language_code, components)
+        
+        if success:
+            return {"status": "success", "message": "Template message sent successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send template message")
+            
+    except Exception as e:
+        logger.error(f"Error sending template message: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send template message")

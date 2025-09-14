@@ -13,6 +13,8 @@ python-dotenv==1.0.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 email-validator==2.1.0
+authlib==1.2.1
+requests==2.31.0
 # Payment and communication
 stripe==7.8.0
 twilio==8.10.3

@@ -35,8 +35,14 @@ export default function AdminProductsPage() {
   // Load products and stats on component mount
   useEffect(() => {
     loadProducts()
-    loadStats()
   }, [page, categoryFilter, statusFilter, sortBy, sortOrder])
+
+  // Load stats when products change
+  useEffect(() => {
+    if (products.length > 0) {
+      loadStats()
+    }
+  }, [products])
 
   // Debounced search effect
   useEffect(() => {
@@ -63,13 +69,7 @@ export default function AdminProductsPage() {
       params.append('sort_order', sortOrder)
       
       if (categoryFilter !== 'all') {
-        // Map frontend categories to database categories
-        const categoryMap: { [key: string]: string } = {
-          'Men': 'jackets',
-          'Women': 'shoes', 
-          'Accessories': 'accessories'
-        }
-        params.append('category', categoryMap[categoryFilter] || categoryFilter)
+        params.append('category', categoryFilter)
       }
       if (statusFilter !== 'all') {
         params.append('is_active', statusFilter === 'active' ? 'true' : 'false')
@@ -78,7 +78,7 @@ export default function AdminProductsPage() {
         params.append('search', searchQuery)
       }
       
-      const response = await apiClient.get(`/admin/products?${params.toString()}`)
+      const response = await apiClient.get(`/admin/products/?${params.toString()}`)
       if (response) {
         setProducts(response.products || [])
         setTotalPages(response.total_pages || 1)
@@ -93,20 +93,31 @@ export default function AdminProductsPage() {
 
   const loadStats = async () => {
     try {
-      const response = await apiClient.get('/admin/products/stats/summary')
-      if (response) {
-        setStats(response)
-      }
+      // Calculate stats from the products data
+      const totalProducts = products.length
+      const activeProducts = products.filter(p => p.is_active).length
+      const inactiveProducts = products.filter(p => !p.is_active).length
+      const featuredProducts = products.filter(p => p.is_featured).length
+      const lowStockProducts = products.filter(p => p.stock_quantity <= 5).length
+      const outOfStockProducts = products.filter(p => p.stock_quantity === 0).length
+      
+      setStats({
+        total_products: totalProducts,
+        active_products: activeProducts,
+        inactive_products: inactiveProducts,
+        featured_products: featuredProducts,
+        low_stock_products: lowStockProducts,
+        out_of_stock_products: outOfStockProducts
+      })
     } catch (error) {
       console.error('Failed to load stats:', error)
-      // Fallback to basic stats if endpoint doesn't exist
       setStats({
-        total_products: products.length,
-        active_products: products.filter(p => p.is_active).length,
-        inactive_products: products.filter(p => !p.is_active).length,
-        featured_products: products.filter(p => p.is_featured).length,
-        low_stock_products: products.filter(p => p.stock_quantity <= p.low_stock_threshold).length,
-        out_of_stock_products: products.filter(p => p.stock_quantity === 0).length
+        total_products: 0,
+        active_products: 0,
+        inactive_products: 0,
+        featured_products: 0,
+        low_stock_products: 0,
+        out_of_stock_products: 0
       })
     }
   }
@@ -123,7 +134,6 @@ export default function AdminProductsPage() {
       await apiClient.delete(`/admin/products/${productToDelete.id}`)
       toast.success('Product deleted successfully')
       loadProducts()
-      loadStats()
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete product')
     } finally {
@@ -137,7 +147,6 @@ export default function AdminProductsPage() {
       await apiClient.put(`/admin/products/${product.id}/status`, { is_active: !product.is_active })
       toast.success(`Product ${product.is_active ? 'deactivated' : 'activated'} successfully`)
       loadProducts()
-      loadStats()
     } catch (error: any) {
       toast.error(error.message || 'Failed to update product status')
     }
@@ -148,7 +157,6 @@ export default function AdminProductsPage() {
       await apiClient.put(`/admin/products/${product.id}/featured`, { is_featured: !product.is_featured })
       toast.success(`Product ${product.is_featured ? 'unfeatured' : 'featured'} successfully`)
       loadProducts()
-      loadStats()
     } catch (error: any) {
       toast.error(error.message || 'Failed to update product featured status')
     }
@@ -279,9 +287,12 @@ export default function AdminProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="Men">Jackets</SelectItem>
-                      <SelectItem value="Women">Shoes</SelectItem>
-                      <SelectItem value="Accessories">Accessories</SelectItem>
+                      <SelectItem value="jackets">Jackets</SelectItem>
+                      <SelectItem value="shoes">Shoes</SelectItem>
+                      <SelectItem value="accessories">Accessories</SelectItem>
+                      <SelectItem value="bags">Bags</SelectItem>
+                      <SelectItem value="belts">Belts</SelectItem>
+                      <SelectItem value="wallets">Wallets</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -356,21 +367,23 @@ export default function AdminProductsPage() {
                           <div className="flex justify-between items-center">
                             <div>
                               <p className="font-semibold text-lg">
-                                {product.price ? formatCurrency(product.price, "USD") : "Request Price"}
+                                ${product.price?.toFixed(2)}
                               </p>
-                              <p className="text-xs text-muted-foreground">
-                                Cost: {product.cost ? formatCurrency(product.cost, "USD") : "Not set"} (Admin only)
-                              </p>
+                              {product.original_price && product.original_price !== product.price && (
+                                <p className="text-xs text-muted-foreground line-through">
+                                  Original: ${product.original_price?.toFixed(2)}
+                                </p>
+                              )}
                             </div>
                             <p className="text-xs text-muted-foreground">Created {formatDate(product.created_at)}</p>
                           </div>
                           <div className="flex justify-between items-center text-sm">
                             <div className="flex items-center gap-4">
-                              <span className={`font-medium ${product.stock_quantity <= product.low_stock_threshold ? 'text-red-600' : 'text-green-600'}`}>
+                              <span className={`font-medium ${product.stock_quantity <= 5 ? 'text-red-600' : 'text-green-600'}`}>
                                 Stock: {product.stock_quantity} units
                               </span>
                               <span className="text-muted-foreground">
-                                Low Stock: {product.low_stock_threshold}
+                                SKU: {product.sku || 'N/A'}
                               </span>
                             </div>
                           </div>

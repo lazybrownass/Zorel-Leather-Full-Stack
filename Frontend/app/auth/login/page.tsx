@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/hooks/use-api"
+import { GoogleOAuthButton } from "@/components/auth/google-oauth-button"
 import { toast } from "sonner"
 
 export default function LoginPage() {
@@ -100,6 +101,17 @@ export default function LoginPage() {
                 OR
               </span>
             </div>
+
+            <GoogleOAuthButton 
+              onSuccess={(token) => {
+                toast.success("Successfully logged in with Google!")
+                router.push("/")
+              }}
+              onError={(error) => {
+                toast.error(`Google login failed: ${error}`)
+              }}
+              className="border-amber-200 hover:border-amber-300 text-amber-900"
+            />
 
             {/* Admin Login Button */}
             <Button

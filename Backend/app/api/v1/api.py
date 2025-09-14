@@ -3,12 +3,13 @@ from app.api.v1.endpoints import (
     auth, products, orders, notifications, pages, admin, payments,
     coupons, reviews, wishlist, upload, search, analytics, admin_auth, whatsapp, admin_requests,
     admin_products, admin_orders, admin_customers, admin_invoices, admin_analytics,
-    cart, customer_orders, customer_profile
+    cart, customer_orders, customer_profile, google_oauth
 )
 
 api_router = APIRouter()
 
 api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
+api_router.include_router(google_oauth.router, prefix="", tags=["google-oauth"])
 api_router.include_router(products.router, prefix="/products", tags=["products"])
 api_router.include_router(orders.router, prefix="/orders", tags=["orders"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])

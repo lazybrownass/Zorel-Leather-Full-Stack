@@ -77,13 +77,40 @@ async def get_admin_products(
         result = await db.execute(query)
         products = result.scalars().all()
         
-        return ProductListResponse(
-            products=[ProductResponse.from_orm(product) for product in products],
-            total=total,
-            page=page,
-            limit=limit,
-            total_pages=(total + limit - 1) // limit
-        )
+        # Return simple response format to avoid validation issues
+        return {
+            "products": [
+                {
+                    "id": str(product.id),
+                    "name": product.name,
+                    "description": product.description,
+                    "price": product.price,
+                    "original_price": product.original_price,
+                    "category": product.category,
+                    "subcategory": product.subcategory,
+                    "brand": product.brand,
+                    "sku": product.sku,
+                    "images": product.images or [],
+                    "specifications": product.specifications or {},
+                    "features": product.features or [],
+                    "sizes": product.sizes or [],
+                    "colors": product.colors or [],
+                    "stock_quantity": product.stock_quantity,
+                    "is_active": product.is_active,
+                    "is_featured": product.is_featured,
+                    "tags": product.tags or [],
+                    "seo_title": product.seo_title,
+                    "seo_description": product.seo_description,
+                    "created_at": product.created_at.isoformat() if product.created_at else None,
+                    "updated_at": product.updated_at.isoformat() if product.updated_at else None
+                }
+                for product in products
+            ],
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total + limit - 1) // limit
+        }
         
     except Exception as e:
         logger.error(f"Error fetching admin products: {str(e)}")

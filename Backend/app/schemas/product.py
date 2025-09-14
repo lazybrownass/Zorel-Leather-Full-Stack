@@ -42,7 +42,7 @@ class ProductBase(BaseModel):
     @field_validator('category')
     @classmethod
     def validate_category(cls, v):
-        allowed_categories = ['men', 'women', 'accessories', 'bags', 'wallets', 'belts', 'shoes']
+        allowed_categories = ['men', 'women', 'accessories', 'bags', 'wallets', 'belts', 'shoes', 'jackets']
         if v.lower() not in allowed_categories:
             raise ValueError(f'Category must be one of: {", ".join(allowed_categories)}')
         return v.lower()
@@ -63,9 +63,12 @@ class ProductBase(BaseModel):
 
     @model_validator(mode='after')
     def validate_price_logic(self):
-        if self.price and self.original_price:
-            if self.original_price <= self.price:
-                raise ValueError('Original price must be greater than current price for discounts')
+        # Allow both scenarios: original price higher (discount) or current price higher (price increase)
+        # Only validate that both prices are positive if provided
+        if self.price and self.price <= 0:
+            raise ValueError('Price must be greater than 0')
+        if self.original_price and self.original_price <= 0:
+            raise ValueError('Original price must be greater than 0')
         return self
 
 class ProductCreate(ProductBase):
