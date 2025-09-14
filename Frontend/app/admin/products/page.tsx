@@ -13,9 +13,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Link from "next/link"
 import Image from "next/image"
 import { Search, Plus, Edit, Trash2, Eye, EyeOff, Loader2, Star, StarOff, MoreHorizontal, Filter, Download, Upload } from "lucide-react"
-import { useAdminProducts } from "@/hooks/use-api"
 import { toast } from "sonner"
-import { api } from "@/lib/api"
+import { apiClient } from "@/lib/api"
 
 export default function AdminProductsPage() {
   const [page, setPage] = useState(1)
@@ -28,22 +27,87 @@ export default function AdminProductsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<any>(null)
   const [stats, setStats] = useState<any>(null)
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [totalPages, setTotalPages] = useState(1)
 
-  const { data: productsResponse, loading, error, refetch } = useAdminProducts(page, 20)
-  const products = productsResponse?.products || []
-  const totalPages = productsResponse?.total_pages || 1
-
-  // Load stats on component mount
+  // Load products and stats on component mount
   useEffect(() => {
+    loadProducts()
     loadStats()
-  }, [])
+  }, [page, categoryFilter, statusFilter, sortBy, sortOrder])
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (page === 1) {
+        loadProducts()
+      } else {
+        setPage(1) // Reset to first page when searching
+      }
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery])
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const params = new URLSearchParams()
+      params.append('page', page.toString())
+      params.append('limit', '20')
+      params.append('sort_by', sortBy)
+      params.append('sort_order', sortOrder)
+      
+      if (categoryFilter !== 'all') {
+        // Map frontend categories to database categories
+        const categoryMap: { [key: string]: string } = {
+          'Men': 'jackets',
+          'Women': 'shoes', 
+          'Accessories': 'accessories'
+        }
+        params.append('category', categoryMap[categoryFilter] || categoryFilter)
+      }
+      if (statusFilter !== 'all') {
+        params.append('is_active', statusFilter === 'active' ? 'true' : 'false')
+      }
+      if (searchQuery) {
+        params.append('search', searchQuery)
+      }
+      
+      const response = await apiClient.get(`/admin/products?${params.toString()}`)
+      if (response) {
+        setProducts(response.products || [])
+        setTotalPages(response.total_pages || 1)
+      }
+    } catch (error) {
+      console.error('Failed to load products:', error)
+      setError('Failed to load products')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const loadStats = async () => {
     try {
-      const response = await api.get('/admin/products/stats/summary')
-      setStats(response.data)
+      const response = await apiClient.get('/admin/products/stats/summary')
+      if (response) {
+        setStats(response)
+      }
     } catch (error) {
       console.error('Failed to load stats:', error)
+      // Fallback to basic stats if endpoint doesn't exist
+      setStats({
+        total_products: products.length,
+        active_products: products.filter(p => p.is_active).length,
+        inactive_products: products.filter(p => !p.is_active).length,
+        featured_products: products.filter(p => p.is_featured).length,
+        low_stock_products: products.filter(p => p.stock_quantity <= p.low_stock_threshold).length,
+        out_of_stock_products: products.filter(p => p.stock_quantity === 0).length
+      })
     }
   }
 
@@ -56,12 +120,12 @@ export default function AdminProductsPage() {
     if (!productToDelete) return
     
     try {
-      await api.delete(`/admin/products/${productToDelete.id}`)
+      await apiClient.delete(`/admin/products/${productToDelete.id}`)
       toast.success('Product deleted successfully')
-      refetch()
+      loadProducts()
       loadStats()
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to delete product')
+      toast.error(error.message || 'Failed to delete product')
     } finally {
       setDeleteDialogOpen(false)
       setProductToDelete(null)
@@ -70,23 +134,23 @@ export default function AdminProductsPage() {
 
   const handleToggleStatus = async (product: any) => {
     try {
-      await api.patch(`/admin/products/${product.id}/status?is_active=${!product.is_active}`)
+      await apiClient.put(`/admin/products/${product.id}/status`, { is_active: !product.is_active })
       toast.success(`Product ${product.is_active ? 'deactivated' : 'activated'} successfully`)
-      refetch()
+      loadProducts()
       loadStats()
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to update product status')
+      toast.error(error.message || 'Failed to update product status')
     }
   }
 
   const handleToggleFeatured = async (product: any) => {
     try {
-      await api.patch(`/admin/products/${product.id}/featured?is_featured=${!product.is_featured}`)
+      await apiClient.put(`/admin/products/${product.id}/featured`, { is_featured: !product.is_featured })
       toast.success(`Product ${product.is_featured ? 'unfeatured' : 'featured'} successfully`)
-      refetch()
+      loadProducts()
       loadStats()
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to update product featured status')
+      toast.error(error.message || 'Failed to update product featured status')
     }
   }
 
@@ -209,15 +273,15 @@ export default function AdminProductsPage() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Select defaultValue="all">
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="men">Men</SelectItem>
-                      <SelectItem value="women">Women</SelectItem>
-                      <SelectItem value="accessories">Accessories</SelectItem>
+                      <SelectItem value="Men">Jackets</SelectItem>
+                      <SelectItem value="Women">Shoes</SelectItem>
+                      <SelectItem value="Accessories">Accessories</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -243,7 +307,7 @@ export default function AdminProductsPage() {
             ) : error ? (
               <div className="text-center py-12">
                 <p className="text-red-600">Error loading products: {error}</p>
-                <Button onClick={() => refetch()} className="mt-4">
+                <Button onClick={() => loadProducts()} className="mt-4">
                   Try Again
                 </Button>
               </div>
@@ -276,6 +340,16 @@ export default function AdminProductsPage() {
                           <p className="text-sm text-muted-foreground">
                             {product.category} • SKU: {product.sku}
                           </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {product.category}
+                            </Badge>
+                            {product.is_featured && (
+                              <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
+                                Featured
+                              </Badge>
+                            )}
+                          </div>
                         </div>
 
                         <div className="space-y-2">
@@ -299,9 +373,6 @@ export default function AdminProductsPage() {
                                 Low Stock: {product.low_stock_threshold}
                               </span>
                             </div>
-                            <Badge variant="outline" className="text-xs">
-                              {product.category}
-                            </Badge>
                           </div>
                         </div>
 
