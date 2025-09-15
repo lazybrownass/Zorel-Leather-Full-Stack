@@ -43,7 +43,7 @@ export default function HomePage() {
     {
       name: "Accessories",
       description: "Premium leather accessories to complete your style",
-      image: "/image_1.png",
+      image: "/leather-accessories-wallets-belts-and-small-goods.jpg",
       href: "/shop/accessories",
       items: "30+ Products",
       featured: "Wallets, Belts, Keychains, Travel"
@@ -242,13 +242,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="font-serif text-5xl font-bold mb-6 text-amber-900 luxury-gradient-text">
+            <h2 className="font-serif text-5xl font-bold mb-6 text-foreground luxury-gradient-text">
               Explore Our Collections
             </h2>
-            <p className="text-xl text-amber-700/80 max-w-3xl mx-auto luxury-text">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto luxury-text">
               Discover our carefully curated collections of premium leather goods, each designed to elevate your style
               and complement your sophisticated lifestyle.
             </p>
@@ -270,13 +270,13 @@ export default function HomePage() {
                 </div>
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-serif text-2xl font-semibold text-amber-900">{category.name}</h3>
-                    <Badge variant="outline" className="text-amber-700 border-amber-300">
+                    <h3 className="font-serif text-2xl font-semibold text-foreground">{category.name}</h3>
+                    <Badge variant="outline" className="text-foreground border-border">
                       {category.items}
                     </Badge>
                   </div>
-                  <p className="text-amber-700/80 mb-4 luxury-text text-lg">{category.description}</p>
-                  <p className="text-amber-600/70 mb-6 text-sm font-medium">{category.featured}</p>
+                  <p className="text-muted-foreground mb-4 luxury-text text-lg">{category.description}</p>
+                  <p className="text-muted-foreground mb-6 text-sm font-medium">{category.featured}</p>
                   <Button asChild className="luxury-button w-full py-3">
                     <Link href={category.href}>
                       Explore Collection
@@ -348,13 +348,13 @@ export default function HomePage() {
       </section>
 
       {/* Our Craftsmanship Process */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="font-serif text-5xl font-bold mb-6 text-amber-900 luxury-gradient-text">
+            <h2 className="font-serif text-5xl font-bold mb-6 text-foreground luxury-gradient-text">
               The Art of Craftsmanship
             </h2>
-            <p className="text-xl text-amber-700/80 max-w-3xl mx-auto luxury-text">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto luxury-text">
               Every ZOREL LEATHER piece is born from a meticulous process that combines traditional techniques 
               with modern innovation. Discover the journey from concept to creation.
             </p>
@@ -365,15 +365,15 @@ export default function HomePage() {
               return (
                 <div key={step.step} className="text-center group animate-fade-in-up" style={{ animationDelay: `${index * 200}ms` }}>
                   <div className="relative mb-8">
-                    <div className="w-24 h-24 luxury-card rounded-full flex items-center justify-center mx-auto luxury-hover bg-amber-50">
-                      <Icon className="h-12 w-12 text-amber-900" />
+                    <div className="w-24 h-24 luxury-card rounded-full flex items-center justify-center mx-auto luxury-hover bg-background">
+                      <Icon className="h-12 w-12 text-foreground" />
                     </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-900 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
                       {step.step}
                     </div>
                   </div>
-                  <h3 className="font-serif text-xl font-semibold mb-4 text-amber-900">{step.title}</h3>
-                  <p className="text-amber-700/80 luxury-text leading-relaxed">{step.description}</p>
+                  <h3 className="font-serif text-xl font-semibold mb-4 text-foreground">{step.title}</h3>
+                  <p className="text-muted-foreground luxury-text leading-relaxed">{step.description}</p>
                 </div>
               )
             })}
@@ -385,10 +385,10 @@ export default function HomePage() {
       <section className="py-20 bg-gradient-to-br from-amber-50 via-white to-amber-50/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="font-serif text-5xl font-bold mb-6 text-amber-900 luxury-gradient-text">
+            <h2 className="font-serif text-5xl font-bold mb-6 text-foreground luxury-gradient-text">
               What Our Customers Say
             </h2>
-            <p className="text-xl text-amber-700/80 max-w-3xl mx-auto luxury-text">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto luxury-text">
               Don't just take our word for it. Hear from our satisfied customers who have experienced 
               the ZOREL LEATHER difference firsthand.
             </p>
@@ -398,10 +398,10 @@ export default function HomePage() {
               <div key={testimonial.name} className="luxury-card p-8 text-center luxury-hover animate-fade-in-up" style={{ animationDelay: `${index * 200}ms` }}>
                 <div className="flex justify-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-amber-400 fill-current" />
+                    <Star key={i} className="h-5 w-5 text-primary fill-primary" />
                   ))}
                 </div>
-                <p className="text-amber-700/80 luxury-text mb-6 italic leading-relaxed">
+                <p className="text-muted-foreground luxury-text mb-6 italic leading-relaxed">
                   "{testimonial.content}"
                 </p>
                 <div className="flex items-center justify-center space-x-3">
@@ -413,8 +413,8 @@ export default function HomePage() {
                     className="rounded-full"
                   />
                   <div className="text-left">
-                    <p className="font-semibold text-amber-900">{testimonial.name}</p>
-                    <p className="text-sm text-amber-600/70">{testimonial.role}</p>
+                    <p className="font-semibold text-foreground">{testimonial.name}</p>
+                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                   </div>
                 </div>
               </div>
@@ -437,43 +437,43 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="luxury-card p-8 text-center luxury-hover group">
-              <div className="w-16 h-16 luxury-card rounded-full flex items-center justify-center mx-auto mb-6 bg-amber-50 group-hover:bg-amber-100 transition-colors">
-                <Gift className="h-8 w-8 text-amber-900" />
+              <div className="w-16 h-16 luxury-card rounded-full flex items-center justify-center mx-auto mb-6 bg-background group-hover:bg-muted transition-colors">
+                <Gift className="h-8 w-8 text-foreground" />
               </div>
-              <h3 className="font-serif text-xl font-semibold mb-4 text-amber-900">Custom Engraving</h3>
-              <p className="text-amber-700/80 luxury-text mb-6">
+              <h3 className="font-serif text-xl font-semibold mb-4 text-foreground">Custom Engraving</h3>
+              <p className="text-muted-foreground luxury-text mb-6">
                 Personalize your leather goods with custom engraving. Add initials, names, or special messages 
                 to make your piece truly unique.
               </p>
-              <Button variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-50">
+              <Button variant="outline" className="border-border text-foreground hover:bg-accent/50">
                 Learn More
               </Button>
             </div>
             
             <div className="luxury-card p-8 text-center luxury-hover group">
-              <div className="w-16 h-16 luxury-card rounded-full flex items-center justify-center mx-auto mb-6 bg-amber-50 group-hover:bg-amber-100 transition-colors">
-                <Zap className="h-8 w-8 text-amber-900" />
+              <div className="w-16 h-16 luxury-card rounded-full flex items-center justify-center mx-auto mb-6 bg-background group-hover:bg-muted transition-colors">
+                <Zap className="h-8 w-8 text-foreground" />
               </div>
-              <h3 className="font-serif text-xl font-semibold mb-4 text-amber-900">Express Crafting</h3>
-              <p className="text-amber-700/80 luxury-text mb-6">
+              <h3 className="font-serif text-xl font-semibold mb-4 text-foreground">Express Crafting</h3>
+              <p className="text-muted-foreground luxury-text mb-6">
                 Need your leather goods in a hurry? Our express crafting service delivers premium quality 
                 in record time without compromising on excellence.
               </p>
-              <Button variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-50">
+              <Button variant="outline" className="border-border text-foreground hover:bg-accent/50">
                 Learn More
               </Button>
             </div>
             
             <div className="luxury-card p-8 text-center luxury-hover group">
-              <div className="w-16 h-16 luxury-card rounded-full flex items-center justify-center mx-auto mb-6 bg-amber-50 group-hover:bg-amber-100 transition-colors">
-                <Heart className="h-8 w-8 text-amber-900" />
+              <div className="w-16 h-16 luxury-card rounded-full flex items-center justify-center mx-auto mb-6 bg-background group-hover:bg-muted transition-colors">
+                <Heart className="h-8 w-8 text-foreground" />
               </div>
-              <h3 className="font-serif text-xl font-semibold mb-4 text-amber-900">Lifetime Care</h3>
-              <p className="text-amber-700/80 luxury-text mb-6">
+              <h3 className="font-serif text-xl font-semibold mb-4 text-foreground">Lifetime Care</h3>
+              <p className="text-muted-foreground luxury-text mb-6">
                 Our lifetime care program includes free cleaning, conditioning, and minor repairs 
                 to keep your leather goods looking pristine for years to come.
               </p>
-              <Button variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-50">
+              <Button variant="outline" className="border-border text-foreground hover:bg-accent/50">
                 Learn More
               </Button>
             </div>

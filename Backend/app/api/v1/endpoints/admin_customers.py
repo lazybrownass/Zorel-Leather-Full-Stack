@@ -67,7 +67,7 @@ async def get_all_customers(
                 email=customer.email,
                 role=customer.role.value,
                 phone=customer.phone,
-                addresses=customer.addresses,
+                addresses=customer.addresses or [],
                 is_active=customer.is_active,
                 created_at=customer.created_at
             )

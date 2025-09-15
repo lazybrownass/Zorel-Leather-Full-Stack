@@ -389,3 +389,81 @@ $RECYCLE.BIN/
 
 # Project specific
 # Add any project-specific files or directories to ignore here
+
+# Deployment files - Keep deployment structure but exclude sensitive data
+deployment/.env
+deployment/.env.local
+deployment/.env.production
+deployment/.env.staging
+deployment/nginx/ssl/
+deployment/backups/
+deployment/logs/
+
+# Docker volumes and data
+deployment/postgres_data/
+deployment/redis_data/
+deployment/backend_uploads/
+deployment/backend_logs/
+
+# Deployment certificates and keys
+deployment/certificates/
+deployment/keys/
+deployment/ssl/
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# Docker build cache
+deployment/.docker/
+deployment/docker-cache/
+
+# Deployment scripts output
+deployment/deploy.log
+deployment/deployment.log
+
+# Local deployment configurations
+deployment/config.local.*
+deployment/settings.local.*
+
+# Production secrets
+deployment/secrets/
+deployment/credentials/
+deployment/auth/
+
+# Backup files
+deployment/*.backup
+deployment/*.bak
+deployment/*.old
+
+# Temporary deployment files
+deployment/tmp/
+deployment/temp/
+deployment/.tmp/
+
+# Keep deployment structure files
+!deployment/README.md
+!deployment/DEPLOYMENT_CHECKLIST.md
+!deployment/docker-compose*.yml
+!deployment/Dockerfile*
+!deployment/.dockerignore
+!deployment/env.example
+!deployment/deploy.sh
+!deployment/nginx/nginx.conf
+
+# Additional production files to keep
+!deployment/backend/
+!deployment/frontend/
+!deployment/nginx/
+
+# Development and testing files
+test_crud_operations_fixed.py
+gui.py
+credentials.txt
+
+# Keep important documentation
+!README.md
+!PROJECT_STRUCTURE.md
+!SETUP_GUIDE.md

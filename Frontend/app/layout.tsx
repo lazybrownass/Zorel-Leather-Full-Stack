@@ -42,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${playfairDisplay.variable} ${sourceSansPro.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${playfairDisplay.variable} ${sourceSansPro.variable}`}>
       <body className="font-sans antialiased">
         <Suspense fallback={null}>
           <AppProvider>

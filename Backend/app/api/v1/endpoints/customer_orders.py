@@ -39,40 +39,49 @@ async def get_my_orders(
         result = await db.execute(query)
         orders = result.scalars().all()
         
-        return [
-            OrderResponse(
+        # Convert to response format
+        order_responses = []
+        for order in orders:
+            # Get order items
+            items_result = await db.execute(
+                select(OrderItem).where(OrderItem.order_id == order.id)
+            )
+            items = items_result.scalars().all()
+            
+            items_response = [
+                OrderItemResponse(
+                    id=str(item.id),
+                    product_id=str(item.product_id),
+                    quantity=item.quantity,
+                    price=item.price
+                )
+                for item in items
+            ]
+            
+            order_responses.append(OrderResponse(
                 id=str(order.id),
-                user_id=str(order.user_id),
-                order_number=order.order_number,
-                status=order.status.value,
-                total_amount=order.total_amount,
-                gst_amount=order.gst_amount,
-                payment_method=order.payment_method.value,
-                payment_status=order.payment_status.value,
-                payment_reference=order.payment_reference,
-                payment_date=order.payment_date,
+                customer_name=order.customer_name,
+                customer_email=order.customer_email,
+                customer_phone=order.customer_phone,
                 shipping_address=order.shipping_address,
-                billing_address=order.billing_address,
-                shipping_company=order.shipping_company,
+                items=items_response,
+                status=order.status,
+                payment_status=order.payment_status,
+                payment_method=order.payment_method,
+                total_amount=order.total_amount,
                 tracking_number=order.tracking_number,
-                estimated_delivery=order.estimated_delivery,
-                actual_delivery=order.actual_delivery,
-                admin_notes=order.admin_notes,
-                internal_notes=order.internal_notes,
-                assigned_to=order.assigned_to,
-                customer_notes=order.customer_notes,
-                communication_log=order.communication_log,
-                confirmed_at=order.confirmed_at,
-                shipped_at=order.shipped_at,
-                delivered_at=order.delivered_at,
+                notes=order.customer_notes,
                 created_at=order.created_at,
                 updated_at=order.updated_at
-            )
-            for order in orders
-        ]
+            ))
+        
+        return order_responses
         
     except Exception as e:
         logger.error(f"Error fetching user orders: {str(e)}")
+        logger.error(f"Error type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch orders"
@@ -115,31 +124,35 @@ async def get_order_details(
                 detail="Access denied"
             )
         
+        # Get order items
+        items_result = await db.execute(
+            select(OrderItem).where(OrderItem.order_id == order.id)
+        )
+        items = items_result.scalars().all()
+        
+        items_response = [
+            OrderItemResponse(
+                id=str(item.id),
+                product_id=str(item.product_id),
+                quantity=item.quantity,
+                price=item.price
+            )
+            for item in items
+        ]
+        
         return OrderResponse(
             id=str(order.id),
-            user_id=str(order.user_id),
-            order_number=order.order_number,
-            status=order.status.value,
-            total_amount=order.total_amount,
-            gst_amount=order.gst_amount,
-            payment_method=order.payment_method.value,
-            payment_status=order.payment_status.value,
-            payment_reference=order.payment_reference,
-            payment_date=order.payment_date,
+            customer_name=order.customer_name,
+            customer_email=order.customer_email,
+            customer_phone=order.customer_phone,
             shipping_address=order.shipping_address,
-            billing_address=order.billing_address,
-            shipping_company=order.shipping_company,
+            items=items_response,
+            status=order.status,
+            payment_status=order.payment_status,
+            payment_method=order.payment_method,
+            total_amount=order.total_amount,
             tracking_number=order.tracking_number,
-            estimated_delivery=order.estimated_delivery,
-            actual_delivery=order.actual_delivery,
-            admin_notes=order.admin_notes,
-            internal_notes=order.internal_notes,
-            assigned_to=order.assigned_to,
-            customer_notes=order.customer_notes,
-            communication_log=order.communication_log,
-            confirmed_at=order.confirmed_at,
-            shipped_at=order.shipped_at,
-            delivered_at=order.delivered_at,
+            notes=order.customer_notes,
             created_at=order.created_at,
             updated_at=order.updated_at
         )
@@ -148,6 +161,9 @@ async def get_order_details(
         raise
     except Exception as e:
         logger.error(f"Error fetching order details: {str(e)}")
+        logger.error(f"Error type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch order details"

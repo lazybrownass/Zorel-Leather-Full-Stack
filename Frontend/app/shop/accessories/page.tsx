@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Heart, Filter, Grid, List, ArrowLeft } from "lucide-react"
+import { Heart, Filter, Grid, List } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 const accessoryProducts = [
   {
@@ -78,20 +80,15 @@ const accessoryProducts = [
 
 export default function AccessoriesPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50/30">
-      <div className="container mx-auto px-4 pt-6">
-        <Button asChild variant="ghost" className="mb-4 text-amber-800 hover:bg-amber-50">
-          <Link href="/shop">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Shop
-          </Link>
-        </Button>
-      </div>
+    <div className="min-h-screen">
+      <Header />
+      
+      <div className="bg-gradient-to-br from-amber-50 via-white to-orange-50/30">
 
       {/* Hero Section */}
       <div className="relative h-[40vh] bg-gradient-to-r from-amber-900 via-orange-800 to-amber-900 overflow-hidden">
         <div className="absolute inset-0 bg-black/40" />
-        <div className="absolute inset-0 bg-[url('/placeholder.svg?height=600&width=1200')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-[url('/leather-accessories-wallets-belts-and-small-goods.jpg')] bg-cover bg-center" />
         <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
           <div className="max-w-2xl">
             <h1 className="text-5xl md:text-6xl font-serif font-bold text-white mb-4 drop-shadow-2xl">
@@ -292,6 +289,9 @@ export default function AccessoriesPage() {
           </Button>
         </div>
       </div>
+      </div>
+      
+      <Footer />
     </div>
   )
 }

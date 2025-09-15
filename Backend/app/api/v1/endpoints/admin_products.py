@@ -294,8 +294,31 @@ async def delete_product(
         if not product:
             raise NotFoundException("Product not found")
         
-        # Check if product has associated orders (optional safety check)
-        # This could be enhanced to check for existing orders
+        # Check if product has associated order items
+        from app.models.sqlalchemy_models import OrderItem, Cart, Review, Wishlist
+        
+        order_items_result = await db.execute(
+            select(OrderItem).where(OrderItem.product_id == product_uuid)
+        )
+        order_items = order_items_result.scalars().all()
+        
+        if order_items:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot delete product - it has associated order items"
+            )
+        
+        # Check for cart items
+        cart_items_result = await db.execute(
+            select(Cart).where(Cart.product_id == product_uuid)
+        )
+        cart_items = cart_items_result.scalars().all()
+        
+        if cart_items:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot delete product - it has items in user carts"
+            )
         
         await db.delete(product)
         await db.commit()

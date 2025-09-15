@@ -17,7 +17,23 @@ Before starting, ensure you have the following installed:
 - **Postman** - [Download Postman](https://www.postman.com/downloads/)
 - **pgAdmin** - [Download pgAdmin](https://www.pgadmin.org/download/)
 
-## 🚀 Quick Setup (5 Minutes)
+## 🚀 Quick Setup Options
+
+### Option 1: Docker Deployment (Recommended - 2 Minutes)
+```bash
+# Clone repository
+git clone <repository-url>
+cd Zorel/deployment
+
+# Configure environment
+cp env.example .env
+# Edit .env with your settings
+
+# Deploy with Docker
+./deploy.sh
+```
+
+### Option 2: Manual Setup (5 Minutes)
 
 ### 1. Clone Repository
 ```bash
@@ -446,36 +462,226 @@ npm test
 npm test -- --watch
 ```
 
-## 🐳 Docker Setup
+## 🐳 Docker Deployment Setup
 
-### Docker Compose
+### Prerequisites for Docker Deployment
+- **Docker Engine 20.10+** - [Install Docker](https://docs.docker.com/get-docker/)
+- **Docker Compose 2.0+** - Usually included with Docker Desktop
+- **At least 4GB RAM** available for containers
+- **At least 10GB free disk space** for images and volumes
+
+### Quick Docker Deployment (Recommended)
+
+#### 1. Navigate to Deployment Directory
 ```bash
-# Build and start all services
-docker-compose up --build
+cd deployment
+```
 
-# Run in background
-docker-compose up -d
+#### 2. Configure Environment
+```bash
+# Copy environment template
+cp env.example .env
+
+# Edit environment variables
+nano .env  # or use your preferred editor
+```
+
+#### 3. Deploy with Docker Compose
+```bash
+# Development deployment
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+# Production deployment
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml --profile production up --build -d
+
+# Or use the automated deployment script
+chmod +x deploy.sh
+./deploy.sh
+```
+
+#### 4. Verify Deployment
+```bash
+# Check service status
+docker-compose ps
 
 # View logs
 docker-compose logs -f
 
-# Stop services
-docker-compose down
+# Test endpoints
+curl http://localhost:3000  # Frontend
+curl http://localhost:8000/health  # Backend health check
 ```
 
-### Individual Docker Commands
+### Docker Compose Services
+
+#### Development Mode
+```bash
+# Start development environment with hot reload
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+# Services included:
+# - PostgreSQL database (port 5432)
+# - Redis cache (port 6379)
+# - Backend API with auto-reload (port 8000)
+# - Frontend with hot reload (port 3000)
+```
+
+#### Production Mode
+```bash
+# Start production environment
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml --profile production up -d
+
+# Services included:
+# - PostgreSQL database (internal only)
+# - Redis cache (internal only)
+# - Backend API with multiple workers
+# - Frontend optimized build
+# - Nginx reverse proxy (ports 80/443)
+```
+
+### Environment Configuration
+
+#### Required Environment Variables
+```env
+# Database Configuration
+DATABASE_URL=postgresql+asyncpg://postgres:spade@postgres:5432/zorel_leather
+DB_PASSWORD=secure_production_password
+
+# Security
+SECRET_KEY=your-super-secret-jwt-key-change-in-production-must-be-32-chars-min
+CORS_ORIGINS=["http://localhost:3000", "https://yourdomain.com"]
+
+# External Services
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
+TWILIO_ACCOUNT_SID=your-twilio-account-sid
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
+
+# Admin Configuration
+ADMIN_EMAIL=admin@zorelleather.com
+ADMIN_PASSWORD=secure_admin_password
+SUPER_ADMIN_EMAIL=superadmin@zorelleather.com
+SUPER_ADMIN_PASSWORD=secure_super_admin_password
+
+# Production Settings
+ENVIRONMENT=production
+FRONTEND_URL=https://yourdomain.com
+REDIS_URL=redis://:secure_redis_password@redis:6379
+```
+
+### Database Migration with Docker
+
+#### Run Migrations
+```bash
+# Apply database migrations
+docker-compose exec backend alembic upgrade head
+
+# Create initial admin user
+docker-compose exec backend python create_admin.py
+
+# Seed sample data (optional)
+docker-compose exec backend python scripts/seed_data.py
+```
+
+#### Backup and Restore
+```bash
+# Backup database
+docker-compose exec postgres pg_dump -U postgres zorel_leather > backup.sql
+
+# Restore database
+docker-compose exec -T postgres psql -U postgres zorel_leather < backup.sql
+```
+
+### Production Deployment
+
+#### SSL/HTTPS Setup
+1. **Obtain SSL certificates** (Let's Encrypt recommended)
+2. **Place certificates** in `deployment/nginx/ssl/`
+3. **Update nginx configuration** for HTTPS
+4. **Use production profile** with SSL enabled
+
+#### Scaling and Load Balancing
+```bash
+# Scale backend workers
+docker-compose up --scale backend=3
+
+# Use Nginx load balancer
+docker-compose --profile production up -d
+```
+
+#### Monitoring and Logs
+```bash
+# View all service logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f postgres
+
+# Monitor resource usage
+docker stats
+
+# Check service health
+docker-compose exec backend curl -f http://localhost:8000/health
+```
+
+### Individual Docker Commands (Advanced)
+
+#### Build Individual Images
 ```bash
 # Build backend image
-docker build -t zorel-backend ./Backend
-
-# Run backend container
-docker run -p 8000:8000 zorel-backend
+docker build -f deployment/backend/Dockerfile -t zorel-backend .
 
 # Build frontend image
-docker build -t zorel-frontend ./Frontend
+docker build -f deployment/frontend/Dockerfile -t zorel-frontend .
+```
 
-# Run frontend container
-docker run -p 3000:3000 zorel-frontend
+#### Run Individual Containers
+```bash
+# Run backend with database
+docker run -d --name zorel-postgres -e POSTGRES_DB=zorel_leather -e POSTGRES_PASSWORD=spade postgres:15-alpine
+docker run -d --name zorel-backend --link zorel-postgres -p 8000:8000 zorel-backend
+
+# Run frontend
+docker run -d --name zorel-frontend -p 3000:3000 zorel-frontend
+```
+
+### Docker Troubleshooting
+
+#### Common Issues
+```bash
+# Port conflicts
+docker-compose down
+# Change ports in docker-compose.yml and restart
+
+# Permission issues
+sudo chown -R $USER:$USER .
+docker-compose down && docker-compose up --build
+
+# Memory issues
+docker system prune -a
+docker-compose up --build
+
+# Network issues
+docker network prune
+docker-compose down && docker-compose up
+```
+
+#### Debug Commands
+```bash
+# Access container shell
+docker-compose exec backend bash
+docker-compose exec frontend sh
+docker-compose exec postgres psql -U postgres -d zorel_leather
+
+# Check container logs
+docker logs zorel-backend
+docker logs zorel-frontend
+
+# Inspect container
+docker inspect zorel-backend
 ```
 
 ## 🔍 Verification

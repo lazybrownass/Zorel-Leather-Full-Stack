@@ -99,40 +99,81 @@ async def get_all_orders(
     payment_status: Optional[PaymentStatus] = Query(None),
     user_id: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100)
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all orders with filtering (Admin only)"""
-    query = {}
-    if status:
-        query["status"] = status
-    if payment_status:
-        query["payment_status"] = payment_status
-    if user_id:
-        query["user_id"] = user_id
-    
-    skip = (page - 1) * limit
-    orders = await Order.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list()
-    
-    return [
-        OrderResponse(
-            id=str(order.id),
-            user_id=order.user_id,
-            items=order.items,
-            shipping_address=order.shipping_address,
-            status=order.status,
-            payment_status=order.payment_status,
-            subtotal=order.subtotal,
-            shipping_cost=order.shipping_cost,
-            tax=order.tax,
-            total=order.total,
-            payment_intent_id=order.payment_intent_id,
-            tracking_number=order.tracking_number,
-            notes=order.notes,
-            created_at=order.created_at,
-            updated_at=order.updated_at
+    try:
+        # Build query
+        query = select(Order)
+        
+        # Apply filters
+        if status:
+            query = query.where(Order.status == status)
+        if payment_status:
+            query = query.where(Order.payment_status == payment_status)
+        if user_id:
+            try:
+                import uuid
+                user_uuid = uuid.UUID(user_id)
+                query = query.where(Order.user_id == user_uuid)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid user ID format"
+                )
+        
+        # Pagination
+        offset = (page - 1) * limit
+        query = query.order_by(desc(Order.created_at)).offset(offset).limit(limit)
+        
+        result = await db.execute(query)
+        orders = result.scalars().all()
+        
+        # Convert to response format
+        order_responses = []
+        for order in orders:
+            # Get order items
+            items_result = await db.execute(
+                select(OrderItem).where(OrderItem.order_id == order.id)
+            )
+            items = items_result.scalars().all()
+            
+            items_response = [
+                OrderItemResponse(
+                    id=str(item.id),
+                    product_id=str(item.product_id),
+                    quantity=item.quantity,
+                    price=item.price
+                )
+                for item in items
+            ]
+            
+            order_responses.append(OrderResponse(
+                id=str(order.id),
+                customer_name=order.customer_name,
+                customer_email=order.customer_email,
+                customer_phone=order.customer_phone,
+                shipping_address=order.shipping_address,
+                items=items_response,
+                status=order.status,
+                payment_status=order.payment_status,
+                payment_method=order.payment_method,
+                total_amount=order.total_amount,
+                tracking_number=order.tracking_number,
+                notes=order.customer_notes,
+                created_at=order.created_at,
+                updated_at=order.updated_at
+            ))
+        
+        return order_responses
+        
+    except Exception as e:
+        logger.error(f"Error fetching orders: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch orders"
         )
-        for order in orders
-    ]
 
 
 
@@ -142,29 +183,48 @@ async def get_all_users(
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
     role: Optional[UserRole] = Query(None),
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100)
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all users (Admin only)"""
-    query = {}
-    if role:
-        query["role"] = role
-    
-    skip = (page - 1) * limit
-    users = await User.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list()
-    
-    return [
-        UserResponse(
-            id=str(user.id),
-            name=user.name,
-            email=user.email,
-            role=user.role,
-            phone=user.phone,
-            addresses=user.addresses,
-            is_active=user.is_active,
-            created_at=user.created_at
+    try:
+        # Build query
+        query = select(User)
+        
+        # Apply filters
+        if role:
+            query = query.where(User.role == role)
+        
+        # Pagination
+        offset = (page - 1) * limit
+        query = query.order_by(desc(User.created_at)).offset(offset).limit(limit)
+        
+        result = await db.execute(query)
+        users = result.scalars().all()
+        
+        return [
+            UserResponse(
+                id=str(user.id),
+                name=user.name,
+                email=user.email,
+                username=user.username,
+                role=user.role,
+                phone=user.phone,
+                addresses=user.addresses or [],
+                is_active=user.is_active,
+                is_verified=user.is_verified,
+                created_at=user.created_at,
+                updated_at=user.updated_at
+            )
+            for user in users
+        ]
+        
+    except Exception as e:
+        logger.error(f"Error fetching users: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch users"
         )
-        for user in users
-    ]
 
 
 
@@ -220,37 +280,53 @@ async def get_all_notifications(
     type: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100)
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all notifications (Admin only)"""
-    query = {}
-    if type:
-        query["type"] = type
-    if status:
-        query["status"] = status
-    
-    skip = (page - 1) * limit
-    notifications = await Notification.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list()
-    
-    return [
-        NotificationResponse(
-            id=str(notification.id),
-            type=notification.type,
-            channel=notification.channel,
-            recipient_email=notification.recipient_email,
-            recipient_phone=notification.recipient_phone,
-            subject=notification.subject,
-            message=notification.message,
-            status=notification.status,
-            order_id=notification.order_id,
-            user_id=notification.user_id,
-            metadata=notification.metadata,
-            sent_at=notification.sent_at,
-            error_message=notification.error_message,
-            created_at=notification.created_at
+    try:
+        # Build query
+        query = select(Notification)
+        
+        # Apply filters
+        if type:
+            query = query.where(Notification.type == type)
+        if status:
+            query = query.where(Notification.status == status)
+        
+        # Pagination
+        offset = (page - 1) * limit
+        query = query.order_by(desc(Notification.created_at)).offset(offset).limit(limit)
+        
+        result = await db.execute(query)
+        notifications = result.scalars().all()
+        
+        return [
+            NotificationResponse(
+                id=str(notification.id),
+                type=notification.type,
+                channel=notification.channel,
+                recipient_email=notification.recipient_email,
+                recipient_phone=notification.recipient_phone,
+                subject=notification.subject,
+                message=notification.message,
+                status=notification.status,
+                order_id=notification.order_id,
+                user_id=notification.user_id,
+                metadata=notification.metadata,
+                sent_at=notification.sent_at,
+                error_message=notification.error_message,
+                created_at=notification.created_at
+            )
+            for notification in notifications
+        ]
+        
+    except Exception as e:
+        logger.error(f"Error fetching notifications: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch notifications"
         )
-        for notification in notifications
-    ]
 
 
 
@@ -393,54 +469,96 @@ async def get_all_requests(
 
 @router.get("/analytics")
 async def get_analytics(
-    current_user: User = Depends(require_roles(UserRole.ADMIN))
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+    db: AsyncSession = Depends(get_db)
 ):
     """Get analytics data (Admin only)"""
-    # Get basic analytics data
-    total_orders = await Order.count()
-    total_products = await Product.count()
-    total_users = await User.count()
-    
-    # Recent activity (last 7 days)
-    week_ago = datetime.utcnow() - timedelta(days=7)
-    recent_orders = await Order.find(Order.created_at >= week_ago).count()
-    recent_users = await User.find(User.created_at >= week_ago).count()
-    
-    return {
-        "overview": {
-            "total_orders": total_orders,
-            "total_products": total_products,
-            "total_users": total_users
-        },
-        "recent_activity": {
-            "orders_last_week": recent_orders,
-            "new_users_last_week": recent_users
+    try:
+        # Get basic analytics data
+        total_orders_query = select(func.count(Order.id))
+        total_orders_result = await db.execute(total_orders_query)
+        total_orders = total_orders_result.scalar()
+        
+        total_products_query = select(func.count(Product.id))
+        total_products_result = await db.execute(total_products_query)
+        total_products = total_products_result.scalar()
+        
+        total_users_query = select(func.count(User.id))
+        total_users_result = await db.execute(total_users_query)
+        total_users = total_users_result.scalar()
+        
+        # Recent activity (last 7 days)
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        
+        recent_orders_query = select(func.count(Order.id)).where(Order.created_at >= week_ago)
+        recent_orders_result = await db.execute(recent_orders_query)
+        recent_orders = recent_orders_result.scalar()
+        
+        recent_users_query = select(func.count(User.id)).where(User.created_at >= week_ago)
+        recent_users_result = await db.execute(recent_users_query)
+        recent_users = recent_users_result.scalar()
+        
+        return {
+            "overview": {
+                "total_orders": total_orders,
+                "total_products": total_products,
+                "total_users": total_users
+            },
+            "recent_activity": {
+                "orders_last_week": recent_orders,
+                "new_users_last_week": recent_users
+            }
         }
-    }
+        
+    except Exception as e:
+        logger.error(f"Error fetching analytics: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch analytics"
+        )
 
 
 @router.get("/customers", response_model=List[UserResponse])
 async def get_all_customers(
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100)
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all customers (Admin only) - alias for users endpoint"""
-    skip = (page - 1) * limit
-    users = await User.find(User.role == UserRole.CUSTOMER).sort("created_at", -1).skip(skip).limit(limit).to_list()
-    
-    return [
-        UserResponse(
-            id=str(user.id),
-            name=user.name,
-            email=user.email,
-            role=user.role,
-            phone=user.phone,
-            addresses=user.addresses,
-            is_active=user.is_active,
-            created_at=user.created_at
+    try:
+        # Build query for customers only
+        query = select(User).where(User.role == UserRole.CUSTOMER)
+        
+        # Pagination
+        offset = (page - 1) * limit
+        query = query.order_by(desc(User.created_at)).offset(offset).limit(limit)
+        
+        result = await db.execute(query)
+        users = result.scalars().all()
+        
+        return [
+            UserResponse(
+                id=str(user.id),
+                name=user.name,
+                email=user.email,
+                username=user.username,
+                role=user.role,
+                phone=user.phone,
+                addresses=user.addresses or [],
+                is_active=user.is_active,
+                is_verified=user.is_verified,
+                created_at=user.created_at,
+                updated_at=user.updated_at
+            )
+            for user in users
+        ]
+        
+    except Exception as e:
+        logger.error(f"Error fetching customers: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch customers"
         )
-        for user in users
-    ]
 
 

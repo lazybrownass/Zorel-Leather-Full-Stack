@@ -1,0 +1,174 @@
+# ZOREL LEATHER Docker Compose Configuration
+# Complete deployment setup with PostgreSQL, Redis, Backend, and Frontend
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: zorel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: zorel_leather
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: spade
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - zorel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: zorel-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_password
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - zorel-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis_password", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ..
+      dockerfile: deployment/backend/Dockerfile
+    container_name: zorel-backend
+    restart: unless-stopped
+    environment:
+      # Database Configuration
+      DATABASE_URL: postgresql+asyncpg://postgres:spade@postgres:5432/zorel_leather
+      DATABASE_NAME: zorel_leather
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: spade
+      
+      # Redis Configuration
+      REDIS_URL: redis://:redis_password@redis:6379
+      
+      # JWT Configuration
+      SECRET_KEY: your-super-secret-jwt-key-change-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      
+      # CORS Configuration
+      CORS_ORIGINS: '["http://localhost:3000", "http://frontend:3000"]'
+      FRONTEND_URL: http://frontend:3000
+      
+      # Environment
+      ENVIRONMENT: production
+      
+      # File Upload
+      MAX_FILE_SIZE: 10485760
+      UPLOAD_DIR: uploads
+      
+      # Admin Configuration
+      ADMIN_EMAIL: admin@zorelleather.com
+      ADMIN_PASSWORD: Admin123!
+      SUPER_ADMIN_EMAIL: superadmin@zorelleather.com
+      SUPER_ADMIN_PASSWORD: SuperAdmin123!
+      
+      # Rate Limiting
+      RATE_LIMIT_PER_MINUTE: 60
+      
+      # Logging
+      LOG_LEVEL: INFO
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    ports:
+      - "8000:8000"
+    networks:
+      - zorel-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Next.js App
+  frontend:
+    build:
+      context: ..
+      dockerfile: deployment/frontend/Dockerfile
+    container_name: zorel-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    networks:
+      - zorel-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: zorel-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - zorel-network
+    depends_on:
+      - frontend
+      - backend
+    profiles:
+      - production
+
+# Named volumes for data persistence
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
+
+# Custom network for service communication
+networks:
+  zorel-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { Search, ShoppingBag, User, Menu, X, Globe, LogOut } from "lucide-react"
+import { Search, ShoppingBag, User, Menu, X, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -96,21 +96,6 @@ export function Header() {
           <div className="flex items-center space-x-3">
             <ThemeToggle />
 
-            {/* Language/Currency Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="hidden sm:flex hover:bg-accent/50">
-                  <Globe className="h-5 w-5 text-foreground" />
-                  <span className="sr-only">Language and currency</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="luxury-card">
-                <DropdownMenuItem className="text-foreground hover:bg-accent/50">English (USD)</DropdownMenuItem>
-                <DropdownMenuItem className="text-foreground hover:bg-accent/50">العربية (SAR)</DropdownMenuItem>
-                <DropdownMenuItem className="text-foreground hover:bg-accent/50">English (EUR)</DropdownMenuItem>
-                <DropdownMenuItem className="text-foreground hover:bg-accent/50">English (MYR)</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             {/* Search */}
             <Button
@@ -150,41 +135,41 @@ export function Header() {
               </Button>
               
               {isProfileDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-border shadow-lg rounded-md z-50">
                   <div className="p-4">
-                    <p className="text-sm font-medium text-gray-900">Profile Menu Working!</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-foreground">Profile Menu Working!</p>
+                    <p className="text-xs text-muted-foreground">
                       Auth: {isAuthenticated ? 'Yes' : 'No'}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       User: {user?.name || 'None'}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Email: {user?.email || 'None'}
                     </p>
                   </div>
                   
-                  <div className="border-t border-gray-200">
+                  <div className="border-t border-border">
                     {isAuthenticated ? (
                       <>
                         <div className="py-1">
                           <Link 
                             href="/account" 
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="block px-4 py-2 text-sm text-foreground/80 hover:bg-accent/50"
                             onClick={() => setIsProfileDropdownOpen(false)}
                           >
                             My Account
                           </Link>
                           <Link 
                             href="/account/orders" 
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="block px-4 py-2 text-sm text-foreground/80 hover:bg-accent/50"
                             onClick={() => setIsProfileDropdownOpen(false)}
                           >
                             My Orders
                           </Link>
                           <Link 
                             href="/account/requests" 
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="block px-4 py-2 text-sm text-foreground/80 hover:bg-accent/50"
                             onClick={() => setIsProfileDropdownOpen(false)}
                           >
                             My Requests
@@ -192,10 +177,10 @@ export function Header() {
                           
                           {isAdmin && (
                             <>
-                              <div className="border-t border-gray-200 my-1"></div>
+                              <div className="border-t border-border my-1"></div>
                               <Link 
                                 href="/admin" 
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="block px-4 py-2 text-sm text-foreground/80 hover:bg-accent/50"
                                 onClick={() => setIsProfileDropdownOpen(false)}
                               >
                                 Go to Admin Panel
@@ -203,7 +188,7 @@ export function Header() {
                               {isSuperAdmin && (
                                 <Link 
                                   href="/admin/approvals" 
-                                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                  className="block px-4 py-2 text-sm text-foreground/80 hover:bg-accent/50"
                                   onClick={() => setIsProfileDropdownOpen(false)}
                                 >
                                   Admin Approvals
@@ -212,9 +197,9 @@ export function Header() {
                             </>
                           )}
                           
-                          <div className="border-t border-gray-200 my-1"></div>
+                          <div className="border-t border-border my-1"></div>
                           <button 
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                            className="w-full text-left px-4 py-2 text-sm text-foreground/80 hover:bg-accent/50 flex items-center"
                             onClick={() => {
                               logout()
                               setIsProfileDropdownOpen(false)
@@ -229,22 +214,22 @@ export function Header() {
                       <div className="py-1">
                         <Link 
                           href="/auth/login" 
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-foreground/80 hover:bg-accent/50"
                           onClick={() => setIsProfileDropdownOpen(false)}
                         >
                           Sign In
                         </Link>
                         <Link 
                           href="/auth/register" 
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-foreground/80 hover:bg-accent/50"
                           onClick={() => setIsProfileDropdownOpen(false)}
                         >
                           Create Account
                         </Link>
-                        <div className="border-t border-gray-200 my-1"></div>
+                        <div className="border-t border-border my-1"></div>
                         <Link 
                           href="/auth/admin-login" 
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-foreground/80 hover:bg-accent/50"
                           onClick={() => setIsProfileDropdownOpen(false)}
                         >
                           Login as Admin

@@ -10,9 +10,9 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <div className="font-serif text-xl font-bold text-primary">ZOREL</div>
-              <div className="text-sm text-foreground/70 font-light tracking-wider">LEATHER</div>
+              <div className="text-sm text-foreground font-light tracking-wider">LEATHER</div>
             </div>
-            <p className="text-sm text-foreground/70 luxury-text">
+            <p className="text-sm text-foreground/90 luxury-text">
               Premium handcrafted leather goods. Each piece tells a story of exceptional craftsmanship and timeless
               elegance.
             </p>
@@ -23,22 +23,22 @@ export function Footer() {
             <h3 className="font-serif text-lg font-semibold text-foreground">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/shop" className="text-foreground/80 hover:text-primary transition-colors">
+                <Link href="/shop" className="text-foreground/90 hover:text-primary transition-colors">
                   Shop All
                 </Link>
               </li>
               <li>
-                <Link href="/shop/men" className="text-foreground/80 hover:text-primary transition-colors">
+                <Link href="/shop/men" className="text-foreground/90 hover:text-primary transition-colors">
                   Men's Collection
                 </Link>
               </li>
               <li>
-                <Link href="/shop/women" className="text-foreground/80 hover:text-primary transition-colors">
+                <Link href="/shop/women" className="text-foreground/90 hover:text-primary transition-colors">
                   Women's Collection
                 </Link>
               </li>
               <li>
-                <Link href="/shop/accessories" className="text-foreground/80 hover:text-primary transition-colors">
+                <Link href="/shop/accessories" className="text-foreground/90 hover:text-primary transition-colors">
                   Accessories
                 </Link>
               </li>
@@ -50,27 +50,27 @@ export function Footer() {
             <h3 className="font-serif text-lg font-semibold text-foreground">Customer Service</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/contact-us" className="text-foreground/80 hover:text-primary transition-colors">
+                <Link href="/contact-us" className="text-foreground/90 hover:text-primary transition-colors">
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link href="/size-guide" className="text-foreground/80 hover:text-primary transition-colors">
+                <Link href="/size-guide" className="text-foreground/90 hover:text-primary transition-colors">
                   Size Guide
                 </Link>
               </li>
               <li>
-                <Link href="/return-policy" className="text-foreground/80 hover:text-primary transition-colors">
+                <Link href="/return-policy" className="text-foreground/90 hover:text-primary transition-colors">
                   Return Policy
                 </Link>
               </li>
               <li>
-                <Link href="/shipping-policy" className="text-foreground/80 hover:text-primary transition-colors">
+                <Link href="/shipping-policy" className="text-foreground/90 hover:text-primary transition-colors">
                   Shipping Policy
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="text-foreground/80 hover:text-primary transition-colors">
+                <Link href="/faq" className="text-foreground/90 hover:text-primary transition-colors">
                   FAQ
                 </Link>
               </li>
@@ -83,7 +83,7 @@ export function Footer() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-primary" />
-                <a href="tel:+601125427250" className="text-foreground/80 hover:text-primary transition-colors">
+                <a href="tel:+601125427250" className="text-foreground/90 hover:text-primary transition-colors">
                   +60 11-2542 7250
                 </a>
               </div>
@@ -91,7 +91,7 @@ export function Footer() {
                 <Mail className="h-4 w-4 text-primary" />
                 <a
                   href="mailto:support@zorelleather.com"
-                  className="text-foreground/80 hover:text-primary transition-colors"
+                  className="text-foreground/90 hover:text-primary transition-colors"
                 >
                   support@zorelleather.com
                 </a>
@@ -102,15 +102,15 @@ export function Footer() {
 
         {/* Bottom section */}
         <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <div className="text-sm text-foreground/70">© 2024 ZOREL LEATHER. All rights reserved.</div>
+          <div className="text-sm text-foreground/90">© 2024 ZOREL LEATHER. All rights reserved.</div>
           <div className="flex space-x-6 text-sm">
-            <Link href="/privacy-policy" className="text-foreground/80 hover:text-primary transition-colors">
+            <Link href="/privacy-policy" className="text-foreground/90 hover:text-primary transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms-of-service" className="text-foreground/80 hover:text-primary transition-colors">
+            <Link href="/terms-of-service" className="text-foreground/90 hover:text-primary transition-colors">
               Terms of Service
             </Link>
-            <Link href="/about-us" className="text-foreground/80 hover:text-primary transition-colors">
+            <Link href="/about-us" className="text-foreground/90 hover:text-primary transition-colors">
               About Us
             </Link>
           </div>

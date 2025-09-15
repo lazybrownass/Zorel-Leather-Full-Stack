@@ -8,10 +8,14 @@ This document provides a comprehensive overview of the project structure, explai
 Zorel/
 ├── Backend/                    # FastAPI backend application
 ├── Frontend/                   # Next.js frontend application
+├── deployment/                 # Docker deployment configuration
 ├── myenv/                      # Python virtual environment
 ├── README.md                   # Main project documentation
 ├── PROJECT_STRUCTURE.md        # This file - detailed structure documentation
-├── GOOGLE_OAUTH_WHATSAPP_SETUP.md  # OAuth and WhatsApp setup guide
+├── SETUP_GUIDE.md              # Complete setup and deployment guide
+├── credentials.txt             # Project credentials and configuration
+├── gui.py                      # GUI application for project management
+├── test_crud_operations_fixed.py  # Database testing utilities
 └── .gitignore                  # Git ignore rules
 ```
 
@@ -456,12 +460,37 @@ myenv/                          # Python virtual environment
 - API integration tests
 - Accessibility tests
 
-## 🚀 Deployment Files
+## 🚀 Deployment Directory (`/deployment/`)
 
-- `Dockerfile` - Backend container configuration
-- `docker-compose.yml` - Full stack deployment
-- `nginx.conf` - Production web server configuration
-- Environment variable templates
+The deployment directory contains all necessary files for containerized deployment using Docker.
+
+```
+deployment/
+├── backend/
+│   ├── Dockerfile              # Backend container configuration
+│   └── .dockerignore           # Backend Docker ignore rules
+├── frontend/
+│   ├── Dockerfile              # Frontend container configuration
+│   └── .dockerignore           # Frontend Docker ignore rules
+├── nginx/
+│   └── nginx.conf              # Production web server configuration
+├── docker-compose.yml          # Main orchestration file
+├── docker-compose.prod.yml     # Production override configuration
+├── docker-compose.dev.yml      # Development override configuration
+├── deploy.sh                   # Automated deployment script
+├── env.example                 # Environment variables template
+├── README.md                   # Deployment documentation
+└── DEPLOYMENT_CHECKLIST.md     # Deployment verification checklist
+```
+
+### Deployment Features
+- **Multi-stage Docker builds** for optimized images
+- **Health checks** for all services
+- **Production and development** configurations
+- **Automated deployment** scripts
+- **Comprehensive documentation** and checklists
+- **Security hardening** for production
+- **Resource limits** and scaling options
 
 ## 📝 Key Features by Directory
 
