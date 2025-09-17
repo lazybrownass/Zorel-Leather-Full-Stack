@@ -10,7 +10,11 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Filter, Eye, Package, DollarSign, Calendar } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { Search, Filter, Eye, Package, DollarSign, Calendar, FileText, Download } from "lucide-react"
 import { apiClient } from "@/lib/api"
 
 interface Order {
@@ -25,12 +29,24 @@ interface Order {
   items_count: number
 }
 
+interface InvoiceResponse {
+  id: string
+  invoice_number: string
+  total_amount: number
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [paymentFilter, setPaymentFilter] = useState("all")
+
+  const [openDialogForOrderId, setOpenDialogForOrderId] = useState<string | null>(null)
+  const [applyVat, setApplyVat] = useState(true)
+  const { toast } = useToast()
+
+  const [orderIdToInvoiceId, setOrderIdToInvoiceId] = useState<Record<string, string>>({})
 
   useEffect(() => {
     fetchOrders()
@@ -114,6 +130,49 @@ export default function AdminOrdersPage() {
     
     return matchesSearch
   })
+
+  const handleGenerateInvoice = async () => {
+    if (!openDialogForOrderId) return
+    try {
+      const res: InvoiceResponse = await apiClient.post(`/admin/invoices/from-order/${openDialogForOrderId}?apply_vat=${applyVat}`)
+      toast({ title: "Invoice generated", description: `#${res.invoice_number} - ${formatCurrency(res.total_amount)}` })
+      setOrderIdToInvoiceId((prev) => ({ ...prev, [openDialogForOrderId]: res.id }))
+      setOpenDialogForOrderId(null)
+    } catch (e: any) {
+      console.error(e)
+      toast({ title: "Failed to generate invoice", description: e?.message || "Try again later", variant: "destructive" })
+    }
+  }
+
+  const handleDownloadInvoice = async (orderId: string) => {
+    const invoiceId = orderIdToInvoiceId[orderId]
+    if (!invoiceId) {
+      toast({ title: "No invoice found", description: "Generate an invoice first." })
+      return
+    }
+    try {
+      const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/api/v1'
+      const token = (typeof window !== 'undefined') ? (localStorage.getItem('admin_token') || localStorage.getItem('auth_token')) : null
+      const res = await fetch(`${base}/admin/invoices/${invoiceId}/download`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `invoice-${invoiceId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e: any) {
+      console.error(e)
+      toast({ title: "Download failed", description: e?.message || "Try again later", variant: "destructive" })
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -229,10 +288,40 @@ export default function AdminOrdersPage() {
                             <TableCell className="text-sm text-muted-foreground">
                               {formatDate(order.created_at)}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="space-x-2">
                               <Button size="sm" variant="outline">
                                 <Eye className="h-4 w-4 mr-2" />
                                 View
+                              </Button>
+
+                              <Dialog open={openDialogForOrderId === order.id} onOpenChange={(open) => setOpenDialogForOrderId(open ? order.id : null)}>
+                                <DialogTrigger asChild>
+                                  <Button size="sm" variant="secondary">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Generate Invoice
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Generate Invoice</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4 py-2">
+                                    <div className="flex items-center space-x-2">
+                                      <Checkbox id="vat" checked={applyVat} onCheckedChange={(checked) => setApplyVat(!!checked)} />
+                                      <Label htmlFor="vat">Apply VAT 18%</Label>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">Invoice will be created from this order's items and totals.</p>
+                                  </div>
+                                  <DialogFooter>
+                                    <Button variant="outline" onClick={() => setOpenDialogForOrderId(null)}>Cancel</Button>
+                                    <Button onClick={handleGenerateInvoice}>Create Invoice</Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+
+                              <Button size="sm" variant="outline" onClick={() => handleDownloadInvoice(order.id)}>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download PDF
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -251,6 +340,8 @@ export default function AdminOrdersPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Generate and Download Invoice actions */}
           </div>
         </main>
       </div>

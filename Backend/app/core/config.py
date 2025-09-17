@@ -89,6 +89,9 @@ class Settings(BaseSettings):
     SENTRY_DSN: str = ""
     LOG_LEVEL: str = "INFO"
     
+    # OpenAI
+    OPENAI_API_KEY: str = ""
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
