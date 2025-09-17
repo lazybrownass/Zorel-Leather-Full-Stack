@@ -5,12 +5,12 @@ import os
 
 class Settings(BaseSettings):
     # Database - PostgreSQL
-    DATABASE_URL: str = "postgresql+asyncpg://new_user:awab123@localhost:5432/zorel_leather"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:awab123@localhost:5432/zorel_leather"
     DATABASE_NAME: str = "zorel_leather"
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
-    DB_USER: str = "new_user"
-    DB_PASSWORD: str = "spade"
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = "awab123"
 
     # Legacy MongoDB (keeping for reference)
     MONGODB_URL: str = "mongodb://localhost:27017"
