@@ -5,7 +5,7 @@ import os
 
 class Settings(BaseSettings):
     # Database - PostgreSQL
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:awab123@localhost:5432/zorel_leather"
+    DATABASE_URL: str = "postgresql+asyncpg://new_user:awab123@localhost:5432/zorel_leather"
     DATABASE_NAME: str = "zorel_leather"
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
