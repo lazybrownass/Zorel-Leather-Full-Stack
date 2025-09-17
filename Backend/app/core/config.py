@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     DATABASE_NAME: str = "zorel_leather"
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
-    DB_USER: str = "postgres"
+    DB_USER: str = "new_user"
     DB_PASSWORD: str = "spade"
 
     # Legacy MongoDB (keeping for reference)
